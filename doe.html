@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEMP Form - 5 Equipment Intake Portal</title>
+
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --danger: #ef4444;
+            --success: #10b981;
+            --success-hover: #059669;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+
+        .main-container {
+            max-width: 1250px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* CONNECTION STATUS BANNER */
+        .db-status-banner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            transition: opacity 0.3s ease;
+        }
+
+        .db-status-banner.success {
+            background-color: #e6fffa;
+            color: #0d9488;
+            border: 1px solid #99f6e4;
+        }
+
+        .db-status-banner.error {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+
+        .db-status-banner.loading {
+            background-color: #f0f9ff;
+            color: #0284c7;
+            border: 1px solid #bae6fd;
+        }
+
+        /* CARD STYLES */
+        .card {
+            background-color: var(--card-bg);
+            padding: 24px 28px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        .single-form-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-weight: 700;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-main);
+            background-color: #fff;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .button-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-add { background-color: var(--primary); color: white; }
+        .btn-add:hover { background-color: var(--primary-hover); }
+
+        .btn-print { background-color: #fff; color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-print:hover { background-color: #f8fafc; }
+
+        .btn-clear { background-color: transparent; color: var(--danger); font-weight: 700; border: none; }
+        .btn-clear:hover { text-decoration: underline; }
+
+        /* GEMP DOCUMENT DISPLAY */
+        .gemp-document {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .top-meta {
+            text-align: right;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .top-meta input {
+            width: 100px;
+            font-weight: bold;
+            border: none;
+            border-bottom: 1px dashed #000;
+            outline: none;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header-title {
+            color: #0000d0;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 0 0 3px 0;
+        }
+
+        .header-legal {
+            font-size: 12px;
+            margin: 0;
+        }
+
+        .agency-info {
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .field-line {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .field-label {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .field-input {
+            border: none;
+            border-bottom: 1px solid #000;
+            width: 400px;
+            margin-left: 8px;
+            font-size: 14px;
+            padding: 2px 5px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .inventory-table th, 
+        .inventory-table td {
+            border: 1px solid #000000;
+            padding: 6px 4px;
+            vertical-align: middle;
+        }
+
+        .inventory-table th {
+            font-weight: bold;
+            background-color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        .th-grey {
+            background-color: #e0e0e0 !important;
+        }
+
+        .account-header-row {
+            text-align: left;
+            font-weight: bold;
+            background-color: #f8fafc;
+            padding-left: 10px !important;
+        }
+
+        /* INLINE EDIT STYLES */
+        .table-inline-input {
+            width: 95% !important;
+            padding: 4px 6px !important;
+            font-size: 11px !important;
+            border: 1px solid var(--primary) !important;
+            border-radius: 4px !important;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .action-cell {
+            white-space: nowrap;
+        }
+
+        .btn-action-edit, .btn-action-save, .btn-action-cancel {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            margin-right: 3px;
+        }
+
+        .btn-action-edit { color: var(--primary); }
+        .btn-action-save { color: var(--success); font-weight: bold; }
+        .btn-action-cancel { color: var(--text-muted); font-weight: bold; }
+
+        .btn-action-delete {
+            background-color: transparent;
+            color: var(--danger);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        /* PRINT MEDIA RULES */
+        @media print {
+            body { background-color: #fff; padding: 0; }
+            .db-status-banner, .card, .action-cell, th.action-col { display: none !important; }
+            .gemp-document { border: none; box-shadow: none; padding: 0; }
+            .field-input, .top-meta input { border-bottom: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <!-- CONNECTION STATUS BANNER -->
+    <div id="dbStatus" class="db-status-banner loading">
+        🔄 Checking connection to Supabase...
+    </div>
+
+    <!-- SINGLE COLUMN INPUT FORM -->
+    <section class="card">
+        <div class="card-title">Add New Equipment Entry</div>
+        <form id="intakeForm" onsubmit="handleAddEquipment(event)">
+            <div class="single-form-stack">
+                <div class="form-group">
+                    <label for="accountNo">Account No.</label>
+                    <input type="text" id="accountNo" required placeholder="e.g. ACC-2026-001">
+                </div>
+                <div class="form-group">
+                    <label for="eqName">Equipment Name / Office Equipment Type</label>
+                    <input type="text" id="eqName" required placeholder="e.g. Syringe Pump / Anesthesia Machine">
+                </div>
+                <div class="form-group">
+                    <label for="brand">Brand / Model</label>
+                    <input type="text" id="brand" required placeholder="e.g. Mindray / Alaris 8100">
+                </div>
+                <div class="form-group">
+                    <label for="area">Area / Room</label>
+                    <input type="text" id="area" required placeholder="e.g. OR 3">
+                </div>
+                <div class="form-group">
+                    <label for="location">Assigned Location</label>
+                    <input type="text" id="location" required placeholder="e.g. ER Bed 4">
+                </div>
+                <div class="form-group">
+                    <label for="statusType">Status</label>
+                    <select id="statusType">
+                        <option value="Operational">Operational</option>
+                        <option value="Non-Operational">Non-Operational</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="qty">Quantity</label>
+                    <input type="number" id="qty" required placeholder="e.g. 1" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="watts">Rating (Watts)</label>
+                    <input type="number" id="watts" placeholder="e.g. 500">
+                </div>
+                <div class="form-group">
+                    <label for="hours">Hours Per Day</label>
+                    <input type="number" id="hours" placeholder="e.g. 8" max="24">
+                </div>
+                <div class="form-group">
+                    <label for="days">Days Per Month</label>
+                    <input type="number" id="days" placeholder="e.g. 20" max="31">
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn btn-add">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add to List
+                </button>
+                <button type="button" onclick="window.print()" class="btn btn-print">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Save/Print PDF
+                </button>
+                <button type="button" onclick="clearList()" class="btn btn-clear">Clear All List</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- OFFICIAL GEMP FORM - 5 DISPLAY -->
+    <section class="gemp-document">
+        <div class="top-meta">
+            GEMP FORM - 5<br>
+            Region : <input type="text" id="regionInput" placeholder="______">
+        </div>
+
+        <div class="header-section">
+            <h1 class="header-title">GOVERNMENT ENERGY MANAGEMENT PROGRAM (GEMP)</h1>
+            <div class="header-subtitle">INVENTORY OF OTHER OFFICE EQUIPMENT</div>
+            <div class="header-legal">(In compliance with R.A. 11285 and its IRR)</div>
+        </div>
+
+        <div class="agency-info">
+            <div class="field-line">
+                <span class="field-label">Name of Government Agency/Office :</span>
+                <input type="text" id="agencyName" class="field-input">
+            </div>
+            <div class="field-line">
+                <span class="field-label">Address :</span>
+                <input type="text" id="agencyAddress" class="field-input">
+            </div>
+        </div>
+
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 4%;">NO.</th>
+                    <th class="th-grey" style="width: 12%;">AREA / ROOM</th>
+                    <th rowspan="2" style="width: 16%;">OFFICE EQUIPMENT TYPE</th>
+                    <th rowspan="2" style="width: 14%;">BRAND/MODEL</th>
+                    <th rowspan="2" style="width: 12%;">STATUS<br><span style="font-weight:normal; text-transform:none;">(Operational/Non-Operational)</span></th>
+                    <th rowspan="2" style="width: 6%;">QUANTITY</th>
+                    <th rowspan="2" style="width: 8%;">RATING (WATTS)</th>
+                    <th colspan="2" style="width: 14%;">OPERATION</th>
+                    <th rowspan="2" style="width: 12%;">ASSIGNED LOCATION</th>
+                    <th rowspan="2" class="action-col" style="width: 6%;">ACTION</th>
+                </tr>
+                <tr>
+                    <th class="th-grey"></th> 
+                    <th>HOURS PER DAY</th>
+                    <th>DAYS PER MONTH</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Dynamic Rows -->
+            </tbody>
+        </table>
+    </section>
+
+</div>
+
+<script>
+    // Initialize Supabase Client
+    const SUPABASE_URL = "https://fozlnwmobikzlcyzptvh.supabase.co"; 
+    const SUPABASE_KEY = "sb_publishable__a_KwlAK5oMMVKK7avBqaQ_lH8QBY-y"; 
+    
+    // Using supabaseClient to avoid variable name collisions with global window.supabase
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let inventory = [];
+    let editingId = null;
+
+    // Fetch all items from Supabase & verify connection
+    async function fetchInventory() {
+        const statusBanner = document.getElementById('dbStatus');
+
+        const { data, error } = await supabaseClient
+            .from('gemp_inventory')
+            .select('*')
+            .order('account_no', { ascending: true })
+            .order('id', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching inventory:', error);
+            if (statusBanner) {
+                statusBanner.className = 'db-status-banner error';
+                statusBanner.innerHTML = '❌ Failed to connect to Supabase database: ' + error.message;
+            }
+            return;
+        }
+
+        // Connection successful
+        if (statusBanner) {
+            statusBanner.className = 'db-status-banner success';
+            statusBanner.innerHTML = '☑ Connected & synced with Supabase!';
+        }
+
+        inventory = data || [];
+        renderTable();
+    }
+
+    // Insert new item to Supabase
+    async function handleAddEquipment(event) {
+        event.preventDefault();
+
+        const newItem = {
+            account_no: document.getElementById('accountNo').value,
+            name: document.getElementById('eqName').value,
+            brand: document.getElementById('brand').value,
+            area: document.getElementById('area').value,
+            location: document.getElementById('location').value,
+            status: document.getElementById('statusType').value,
+            qty: parseInt(document.getElementById('qty').value) || 1,
+            watts: document.getElementById('watts').value ? parseFloat(document.getElementById('watts').value) : null,
+            hours: document.getElementById('hours').value ? parseFloat(document.getElementById('hours').value) : null,
+            days: document.getElementById('days').value ? parseFloat(document.getElementById('days').value) : null
+        };
+
+        const { error } = await supabaseClient
+            .from('gemp_inventory')
+            .insert([newItem]);
+
+        if (error) {
+            console.error('Error inserting equipment:', error);
+            alert('Failed to add equipment entry: ' + error.message);
+            return;
+        }
+
+        // Reset equipment fields
+        document.getElementById('eqName').value = '';
+        document.getElementById('brand').value = '';
+        document.getElementById('area').value = '';
+        document.getElementById('location').value = '';
+        document.getElementById('watts').value = '';
+        document.getElementById('hours').value = '';
+        document.getElementById('days').value = '';
+        document.getElementById('eqName').focus();
+
+        await fetchInventory();
+    }
+
+    function editInline(id) {
+        editingId = id;
+        renderTable();
+    }
+
+    // Update existing item in Supabase
+    async function saveInline(id) {
+        const row = document.getElementById(`row-${id}`);
+        
+        const updatedItem = {
+            area: row.querySelector('.edit-area').value,
+            name: row.querySelector('.edit-name').value,
+            brand: row.querySelector('.edit-brand').value,
+            status: row.querySelector('.edit-status').value,
+            qty: parseInt(row.querySelector('.edit-qty').value) || 1,
+            watts: row.querySelector('.edit-watts').value ? parseFloat(row.querySelector('.edit-watts').value) : null,
+            hours: row.querySelector('.edit-hours').value ? parseFloat(row.querySelector('.edit-hours').value) : null,
+            days: row.querySelector('.edit-days').value ? parseFloat(row.querySelector('.edit-days').value) : null,
+            location: row.querySelector('.edit-location').value
+        };
+
+        const { error } = await supabaseClient
+            .from('gemp_inventory')
+            .update(updatedItem)
+            .eq('id', id);
+
+        if (error) {
+            console.error('Error updating item:', error);
+            alert('Failed to save inline edit: ' + error.message);
+            return;
+        }
+
+        editingId = null;
+        await fetchInventory();
+    }
+
+    function cancelInline() {
+        editingId = null;
+        renderTable();
+    }
+
+    // Delete single item from Supabase
+    async function removeItem(id) {
+        if (confirm("Are you sure you want to delete this row?")) {
+            const { error } = await supabaseClient
+                .from('gemp_inventory')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                console.error('Error deleting item:', error);
+                alert('Failed to delete item: ' + error.message);
+                return;
+            }
+
+            if (editingId === id) editingId = null;
+            await fetchInventory();
+        }
+    }
+
+    // Clear all rows from Supabase
+    async function clearList() {
+        if (confirm("Are you sure you want to clear all table rows from the database?")) {
+            const { error } = await supabaseClient
+                .from('gemp_inventory')
+                .delete()
+                .neq('id', 0); // Deletes all records
+
+            if (error) {
+                console.error('Error clearing list:', error);
+                alert('Failed to clear list: ' + error.message);
+                return;
+            }
+
+            editingId = null;
+            await fetchInventory();
+        }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        if (inventory.length === 0) {
+            const emptyRow = document.createElement('tr');
+            emptyRow.innerHTML = `<td colspan="11" style="padding: 20px; color: #888; font-style: italic;">No equipment items added yet. Fill out the form above to populate data.</td>`;
+            tbody.appendChild(emptyRow);
+            return;
+        }
+
+        let currentAccount = null;
+        let itemCounter = 1;
+
+        inventory.forEach((item) => {
+            // Group header by Account No.
+            if (item.account_no !== currentAccount) {
+                currentAccount = item.account_no;
+                const accHeaderRow = document.createElement('tr');
+                accHeaderRow.innerHTML = `
+                    <td></td>
+                    <td colspan="10" class="account-header-row">
+                        Account No. ${item.account_no}
+                    </td>
+                `;
+                tbody.appendChild(accHeaderRow);
+            }
+
+            const row = document.createElement('tr');
+            row.id = `row-${item.id}`;
+
+            // Check if this row is being edited inline
+            if (editingId === item.id) {
+                row.innerHTML = `
+                    <td>${itemCounter++}</td>
+                    <td><input type="text" class="table-inline-input edit-area" value="${item.area || ''}"></td>
+                    <td><input type="text" class="table-inline-input edit-name" value="${item.name || ''}"></td>
+                    <td><input type="text" class="table-inline-input edit-brand" value="${item.brand || ''}"></td>
+                    <td>
+                        <select class="table-inline-input edit-status">
+                            <option value="Operational" ${item.status === 'Operational' ? 'selected' : ''}>Operational</option>
+                            <option value="Non-Operational" ${item.status === 'Non-Operational' ? 'selected' : ''}>Non-Operational</option>
+                        </select>
+                    </td>
+                    <td><input type="number" class="table-inline-input edit-qty" value="${item.qty || 1}"></td>
+                    <td><input type="number" class="table-inline-input edit-watts" value="${item.watts ?? ''}"></td>
+                    <td><input type="number" class="table-inline-input edit-hours" value="${item.hours ?? ''}"></td>
+                    <td><input type="number" class="table-inline-input edit-days" value="${item.days ?? ''}"></td>
+                    <td><input type="text" class="table-inline-input edit-location" value="${item.location || ''}"></td>
+                    <td class="action-cell">
+                        <button class="btn-action-save" title="Save Row" onclick="saveInline(${item.id})">💾</button>
+                        <button class="btn-action-cancel" title="Cancel" onclick="cancelInline()">✕</button>
+                    </td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${itemCounter++}</td>
+                    <td>${item.area || ''}</td>
+                    <td style="font-weight: bold;">${item.name || ''}</td>
+                    <td>${item.brand || ''}</td>
+                    <td>${item.status || ''}</td>
+                    <td>${item.qty || ''}</td>
+                    <td>${item.watts ?? ''}</td>
+                    <td>${item.hours ?? ''}</td>
+                    <td>${item.days ?? ''}</td>
+                    <td>${item.location || ''}</td>
+                    <td class="action-cell">
+                        <button class="btn-action-edit" title="Edit Inline" onclick="editInline(${item.id})">✏️</button>
+                        <button class="btn-action-delete" title="Delete Row" onclick="removeItem(${item.id})">✕</button>
+                    </td>
+                `;
+            }
+
+            tbody.appendChild(row);
+        });
+    }
+
+    // Fetch data on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        fetchInventory();
+    });
+</script>
+
+</body>
+</html>

@@ -258,13 +258,6 @@
             background-color: #e0e0e0 !important;
         }
 
-        .account-header-row {
-            text-align: left;
-            font-weight: bold;
-            background-color: #f8fafc;
-            padding-left: 10px !important;
-        }
-
         /* INLINE EDIT STYLES */
         .table-inline-input {
             width: 95% !important;
@@ -411,14 +404,15 @@
             <thead>
                 <tr>
                     <th rowspan="2" style="width: 4%;">NO.</th>
-                    <th class="th-grey" style="width: 12%;">AREA / ROOM</th>
-                    <th rowspan="2" style="width: 16%;">OFFICE EQUIPMENT TYPE</th>
-                    <th rowspan="2" style="width: 14%;">BRAND/MODEL</th>
-                    <th rowspan="2" style="width: 12%;">STATUS<br><span style="font-weight:normal; text-transform:none;">(Operational/Non-Operational)</span></th>
+                    <th rowspan="2" style="width: 10%;">ACCOUNT NO.</th>
+                    <th class="th-grey" style="width: 11%;">AREA / ROOM</th>
+                    <th rowspan="2" style="width: 15%;">OFFICE EQUIPMENT TYPE</th>
+                    <th rowspan="2" style="width: 13%;">BRAND/MODEL</th>
+                    <th rowspan="2" style="width: 11%;">STATUS<br><span style="font-weight:normal; text-transform:none;">(Operational/Non-Operational)</span></th>
                     <th rowspan="2" style="width: 6%;">QUANTITY</th>
                     <th rowspan="2" style="width: 8%;">RATING (WATTS)</th>
-                    <th colspan="2" style="width: 14%;">OPERATION</th>
-                    <th rowspan="2" style="width: 12%;">ASSIGNED LOCATION</th>
+                    <th colspan="2" style="width: 13%;">OPERATION</th>
+                    <th rowspan="2" style="width: 11%;">ASSIGNED LOCATION</th>
                     <th rowspan="2" class="action-col" style="width: 6%;">ACTION</th>
                 </tr>
                 <tr>
@@ -525,6 +519,7 @@
         const row = document.getElementById(`row-${id}`);
         
         const updatedItem = {
+            account_no: row.querySelector('.edit-account').value,
             area: row.querySelector('.edit-area').value,
             name: row.querySelector('.edit-name').value,
             brand: row.querySelector('.edit-brand').value,
@@ -600,28 +595,14 @@
 
         if (inventory.length === 0) {
             const emptyRow = document.createElement('tr');
-            emptyRow.innerHTML = `<td colspan="11" style="padding: 20px; color: #888; font-style: italic;">No equipment items added yet. Fill out the form above to populate data.</td>`;
+            emptyRow.innerHTML = `<td colspan="12" style="padding: 20px; color: #888; font-style: italic;">No equipment items added yet. Fill out the form above to populate data.</td>`;
             tbody.appendChild(emptyRow);
             return;
         }
 
-        let currentAccount = null;
         let itemCounter = 1;
 
         inventory.forEach((item) => {
-            // Group header by Account No.
-            if (item.account_no !== currentAccount) {
-                currentAccount = item.account_no;
-                const accHeaderRow = document.createElement('tr');
-                accHeaderRow.innerHTML = `
-                    <td></td>
-                    <td colspan="10" class="account-header-row">
-                        Account No. ${item.account_no}
-                    </td>
-                `;
-                tbody.appendChild(accHeaderRow);
-            }
-
             const row = document.createElement('tr');
             row.id = `row-${item.id}`;
 
@@ -629,6 +610,7 @@
             if (editingId === item.id) {
                 row.innerHTML = `
                     <td>${itemCounter++}</td>
+                    <td><input type="text" class="table-inline-input edit-account" value="${item.account_no || ''}"></td>
                     <td><input type="text" class="table-inline-input edit-area" value="${item.area || ''}"></td>
                     <td><input type="text" class="table-inline-input edit-name" value="${item.name || ''}"></td>
                     <td><input type="text" class="table-inline-input edit-brand" value="${item.brand || ''}"></td>
@@ -651,6 +633,7 @@
             } else {
                 row.innerHTML = `
                     <td>${itemCounter++}</td>
+                    <td style="font-weight: bold;">${item.account_no || ''}</td>
                     <td>${item.area || ''}</td>
                     <td style="font-weight: bold;">${item.name || ''}</td>
                     <td>${item.brand || ''}</td>

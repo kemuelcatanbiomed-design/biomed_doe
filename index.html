@@ -1,664 +1,1681 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEMP Form - 5 Equipment Intake Portal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title id="page-title">Citrus Glow Lemonade Bar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    <!-- Supabase JS Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --danger: #ef4444;
-            --success: #10b981;
-            --success-hover: #059669;
-        }
-
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 24px;
-            box-sizing: border-box;
-        }
-
-        .main-container {
-            max-width: 1250px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        /* CONNECTION STATUS BANNER */
-        .db-status-banner {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 13.5px;
-            font-weight: 600;
-            transition: opacity 0.3s ease;
-        }
-
-        .db-status-banner.success {
-            background-color: #e6fffa;
-            color: #0d9488;
-            border: 1px solid #99f6e4;
-        }
-
-        .db-status-banner.error {
-            background-color: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
-        }
-
-        .db-status-banner.loading {
-            background-color: #f0f9ff;
-            color: #0284c7;
-            border: 1px solid #bae6fd;
-        }
-
-        /* CARD STYLES */
-        .card {
-            background-color: var(--card-bg);
-            padding: 24px 28px;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-color);
-        }
-
-        .card-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-        }
-
-        .single-form-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        label {
-            font-weight: 700;
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        input[type="text"], input[type="number"], select {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 14px;
-            font-family: inherit;
-            color: var(--text-main);
-            background-color: #fff;
-            transition: all 0.2s ease;
-        }
-
-        input[type="text"]:focus, input[type="number"]:focus, select:focus {
-            border-color: var(--primary);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-        }
-
-        .button-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13.5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-add { background-color: var(--primary); color: white; }
-        .btn-add:hover { background-color: var(--primary-hover); }
-
-        .btn-print { background-color: #fff; color: var(--text-main); border: 1px solid var(--border-color); }
-        .btn-print:hover { background-color: #f8fafc; }
-
-        .btn-clear { background-color: transparent; color: var(--danger); font-weight: 700; border: none; }
-        .btn-clear:hover { text-decoration: underline; }
-
-        /* GEMP DOCUMENT DISPLAY */
-        .gemp-document {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        .top-meta {
-            text-align: right;
-            font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-
-        .top-meta input {
-            width: 100px;
-            font-weight: bold;
-            border: none;
-            border-bottom: 1px dashed #000;
-            outline: none;
-        }
-
-        .header-section {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .header-title {
-            color: #0000d0;
-            font-size: 20px;
-            font-weight: bold;
-            margin: 0 0 5px 0;
-        }
-
-        .header-subtitle {
-            font-size: 14px;
-            font-weight: bold;
-            margin: 0 0 3px 0;
-        }
-
-        .header-legal {
-            font-size: 12px;
-            margin: 0;
-        }
-
-        .agency-info {
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.8;
-        }
-
-        .field-line {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        .field-label {
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .field-input {
-            border: none;
-            border-bottom: 1px solid #000;
-            width: 400px;
-            margin-left: 8px;
-            font-size: 14px;
-            padding: 2px 5px;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .inventory-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            text-align: center;
-        }
-
-        .inventory-table th, 
-        .inventory-table td {
-            border: 1px solid #000000;
-            padding: 6px 4px;
-            vertical-align: middle;
-        }
-
-        .inventory-table th {
-            font-weight: bold;
-            background-color: #ffffff;
-            text-transform: uppercase;
-        }
-
-        .th-grey {
-            background-color: #e0e0e0 !important;
-        }
-
-        /* INLINE EDIT STYLES */
-        .table-inline-input {
-            width: 95% !important;
-            padding: 4px 6px !important;
-            font-size: 11px !important;
-            border: 1px solid var(--primary) !important;
-            border-radius: 4px !important;
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        .action-cell {
-            white-space: nowrap;
-        }
-
-        .btn-action-edit, .btn-action-save, .btn-action-cancel {
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            margin-right: 3px;
-        }
-
-        .btn-action-edit { color: var(--primary); }
-        .btn-action-save { color: var(--success); font-weight: bold; }
-        .btn-action-cancel { color: var(--text-muted); font-weight: bold; }
-
-        .btn-action-delete {
-            background-color: transparent;
-            color: var(--danger);
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        /* PRINT MEDIA RULES */
-        @media print {
-            body { background-color: #fff; padding: 0; }
-            .db-status-banner, .card, .action-cell, th.action-col { display: none !important; }
-            .gemp-document { border: none; box-shadow: none; padding: 0; }
-            .field-input, .top-meta input { border-bottom: none !important; }
-        }
-    </style>
+    #app-scale-container {
+      transform-origin: top center;
+      transition: transform 0.15s ease-out;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 font-sans h-screen flex flex-col overflow-hidden select-none">
 
-<div class="main-container">
+  <!-- Header -->
+  <header class="bg-amber-400 border-b border-amber-500 px-3 sm:px-6 py-2 flex flex-wrap items-center justify-between shadow-sm flex-shrink-0 gap-2 z-20">
+    <div class="flex items-center gap-2.5">
+      <span class="text-2xl sm:text-3xl">🍋</span>
+      <div>
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <h1 id="store-display-name" class="font-black text-sm sm:text-base md:text-lg leading-tight text-amber-950">Citrus Glow Lemonade Bar</h1>
+          <button id="edit-store-btn" onclick="openStoreNameModal()" class="hidden px-2 py-0.5 rounded-lg bg-amber-500/40 hover:bg-amber-500 text-[10px] sm:text-xs font-bold text-amber-950 border border-amber-600/40 active:scale-95 transition">
+            ✏️ <span data-i18n="rename">Rename</span>
+          </button>
+        </div>
+        <p id="store-subtitle" class="text-[10px] sm:text-xs text-amber-900 font-semibold" data-i18n="subtitle">Adaptive POS, Inventory & Profit Engine</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-1.5 sm:gap-3 flex-wrap">
+      <!-- Language Toggle Switch (EN / TL) -->
+      <button onclick="toggleLanguage()" class="px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-black bg-white hover:bg-amber-50 text-amber-950 border border-amber-600/30 shadow-2xs flex items-center gap-1 active:scale-95 transition">
+        <span>🌐</span>
+        <span id="lang-indicator" class="font-mono">EN</span>
+      </button>
 
-    <!-- CONNECTION STATUS BANNER -->
-    <div id="dbStatus" class="db-status-banner loading">
-        🔄 Checking connection to Supabase...
+      <!-- Scale Controller -->
+      <div class="flex items-center bg-amber-500/30 rounded-xl p-1 border border-amber-600/20 text-xs">
+        <button onclick="adjustScale(-0.05)" title="Decrease Size" class="w-7 h-7 flex items-center justify-center font-bold bg-white text-slate-800 rounded-lg shadow-2xs active:bg-amber-100">－</button>
+        <span id="scale-indicator" onclick="resetScale()" title="Click to Reset" class="px-2 font-mono font-bold text-[11px] text-amber-950 cursor-pointer select-none">100%</span>
+        <button onclick="adjustScale(0.05)" title="Increase Size" class="w-7 h-7 flex items-center justify-center font-bold bg-white text-slate-800 rounded-lg shadow-2xs active:bg-amber-100">＋</button>
+      </div>
+
+      <!-- Fullscreen Toggle -->
+      <button onclick="toggleFullscreen()" title="Fullscreen Mode" class="w-8 h-8 flex items-center justify-center bg-white/80 hover:bg-white text-amber-950 font-bold rounded-xl border border-amber-600/30 shadow-2xs active:scale-95 transition text-sm">
+        ⛶
+      </button>
+
+      <!-- Owner / Seller Toggle -->
+      <button id="auth-status-btn" onclick="toggleOwnerAuth()" class="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold border border-amber-600/40 bg-amber-500/20 text-amber-950 flex items-center gap-1.5 active:scale-95 transition">
+        <span id="lock-icon" class="text-sm">🔒</span>
+        <span id="lock-text" class="hidden md:inline">Seller Mode</span>
+      </button>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex bg-amber-300/80 p-1 rounded-xl">
+        <button id="tab-pos-btn" onclick="switchView('pos')" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold bg-white text-amber-950 shadow-sm transition active:scale-95">
+          🛒 <span data-i18n="tab_pos">POS</span>
+        </button>
+        <button id="tab-inventory-btn" onclick="switchView('inventory')" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-amber-900 hover:text-amber-950 transition active:scale-95">
+          📦 <span data-i18n="tab_inventory">Stock & Cost</span>
+        </button>
+        <button id="tab-analytics-btn" onclick="switchView('analytics')" class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-amber-900 hover:text-amber-950 transition active:scale-95">
+          📊 <span data-i18n="tab_income">Income & Expenses</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Scale-Ready Body Container -->
+  <div id="app-scale-container" class="flex-1 overflow-hidden relative flex flex-col">
+
+    <!-- VIEW 1: CASHIER POS -->
+    <div id="view-pos" class="h-full flex flex-col lg:flex-row p-2 sm:p-3 gap-2 sm:gap-3 overflow-hidden">
+      <section class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[220px]">
+        <div class="p-2.5 sm:p-3 border-b border-slate-100 flex items-center justify-between bg-slate-50 flex-shrink-0">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-600" data-i18n="select_flavor">Select Lemonade Flavor</span>
+          <span id="pos-product-count" class="text-xs font-medium text-slate-500">6 Flavors Available</span>
+        </div>
+        <div id="product-grid" class="flex-1 p-2 sm:p-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3 overflow-y-auto content-start"></div>
+      </section>
+
+      <section class="w-full lg:w-[380px] xl:w-[410px] bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden flex-shrink-0">
+        <div class="p-2.5 sm:p-3 border-b border-slate-100 flex items-center justify-between bg-amber-50 flex-shrink-0">
+          <h2 class="font-extrabold text-sm text-amber-950" data-i18n="customer_order">Customer Order</h2>
+          <button onclick="clearCart()" class="text-xs text-rose-600 hover:text-rose-800 font-bold px-2 py-1 rounded bg-rose-50 active:scale-95" data-i18n="clear_cart">Clear Cart</button>
+        </div>
+
+        <div id="cart-list" class="flex-1 p-2 sm:p-3 overflow-y-auto divide-y divide-slate-100 max-h-[140px] lg:max-h-none"></div>
+
+        <div class="p-2.5 sm:p-3.5 bg-slate-50 border-t border-slate-200 flex flex-col gap-2 flex-shrink-0">
+          <div class="flex justify-between items-baseline">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wide" data-i18n="total_due">Total Due:</span>
+            <span id="cart-total" class="text-xl sm:text-2xl font-black text-slate-900 font-mono">₱0.00</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+            <button onclick="setQuickCash('exact')" class="px-2.5 py-1 bg-white border border-slate-300 font-bold rounded-lg shadow-2xs hover:bg-slate-100 active:scale-95" data-i18n="exact">Exact</button>
+            <button onclick="setQuickCash(50)" class="px-2.5 py-1 bg-white border border-slate-300 font-bold rounded-lg shadow-2xs hover:bg-slate-100 active:scale-95">₱50</button>
+            <button onclick="setQuickCash(100)" class="px-2.5 py-1 bg-white border border-slate-300 font-bold rounded-lg shadow-2xs hover:bg-slate-100 active:scale-95">₱100</button>
+            <button onclick="setQuickCash(200)" class="px-2.5 py-1 bg-white border border-slate-300 font-bold rounded-lg shadow-2xs hover:bg-slate-100 active:scale-95">₱200</button>
+            <button onclick="setQuickCash(500)" class="px-2.5 py-1 bg-white border border-slate-300 font-bold rounded-lg shadow-2xs hover:bg-slate-100 active:scale-95">₱500</button>
+            <button onclick="setQuickCash(1000)" class="px-2.5 py-1 bg-white border border-slate-300 font-bold rounded-lg shadow-2xs hover:bg-slate-100 active:scale-95">₱1k</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <span class="text-[10px] font-bold uppercase text-slate-400 block" data-i18n="cash_tendered">Cash Tendered</span>
+              <div class="text-sm sm:text-base font-black text-slate-900 font-mono" id="cash-tendered-display">₱0</div>
+            </div>
+            <div class="bg-white p-2 rounded-xl border border-slate-200">
+              <span class="text-[10px] font-bold uppercase text-slate-400 block" data-i18n="change_due">Change</span>
+              <div class="text-sm sm:text-base font-black text-emerald-600 font-mono" id="change-due">₱0.00</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1.5 text-slate-800">
+            <button onclick="keypadPress('1')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">1</button>
+            <button onclick="keypadPress('2')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">2</button>
+            <button onclick="keypadPress('3')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">3</button>
+            <button onclick="keypadPress('4')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">4</button>
+            <button onclick="keypadPress('5')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">5</button>
+            <button onclick="keypadPress('6')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">6</button>
+            <button onclick="keypadPress('7')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">7</button>
+            <button onclick="keypadPress('8')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">8</button>
+            <button onclick="keypadPress('9')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">9</button>
+            <button onclick="keypadPress('C')" class="py-2 sm:py-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-bold text-xs active:bg-rose-200" data-i18n="clear_btn">CLEAR</button>
+            <button onclick="keypadPress('0')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-sm sm:text-base shadow-2xs active:bg-amber-100">0</button>
+            <button onclick="keypadPress('00')" class="py-2 sm:py-2.5 bg-white border border-slate-200 rounded-lg font-bold text-xs shadow-2xs active:bg-amber-100">00</button>
+          </div>
+
+          <button id="pay-btn" onclick="completeOrder()" disabled
+            class="w-full py-3 sm:py-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-sm transition active:scale-98">
+            Complete Order (₱0.00)
+          </button>
+        </div>
+      </section>
     </div>
 
-    <!-- SINGLE COLUMN INPUT FORM -->
-    <section class="card">
-        <div class="card-title">Add New Equipment Entry</div>
-        <form id="intakeForm" onsubmit="handleAddEquipment(event)">
-            <div class="single-form-stack">
-                <div class="form-group">
-                    <label for="accountNo">Account No.</label>
-                    <input type="text" id="accountNo" required placeholder="e.g. ACC-2026-001">
-                </div>
-                <div class="form-group">
-                    <label for="eqName">Equipment Name / Office Equipment Type</label>
-                    <input type="text" id="eqName" required placeholder="e.g. Syringe Pump / Anesthesia Machine">
-                </div>
-                <div class="form-group">
-                    <label for="brand">Brand / Model</label>
-                    <input type="text" id="brand" required placeholder="e.g. Mindray / Alaris 8100">
-                </div>
-                <div class="form-group">
-                    <label for="area">Area / Room</label>
-                    <input type="text" id="area" required placeholder="e.g. OR 3">
-                </div>
-                <div class="form-group">
-                    <label for="location">Assigned Location</label>
-                    <input type="text" id="location" required placeholder="e.g. ER Bed 4">
-                </div>
-                <div class="form-group">
-                    <label for="statusType">Status</label>
-                    <select id="statusType">
-                        <option value="Operational">Operational</option>
-                        <option value="Non-Operational">Non-Operational</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="qty">Quantity</label>
-                    <input type="number" id="qty" required placeholder="e.g. 1" value="1" min="1">
-                </div>
-                <div class="form-group">
-                    <label for="watts">Rating (Watts)</label>
-                    <input type="number" id="watts" placeholder="e.g. 500">
-                </div>
-                <div class="form-group">
-                    <label for="hours">Hours Per Day</label>
-                    <input type="number" id="hours" placeholder="e.g. 8" max="24">
-                </div>
-                <div class="form-group">
-                    <label for="days">Days Per Month</label>
-                    <input type="number" id="days" placeholder="e.g. 20" max="31">
-                </div>
-            </div>
-            
-            <div class="button-group">
-                <button type="submit" class="btn btn-add">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add to List
-                </button>
-                <button type="button" onclick="window.print()" class="btn btn-print">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    Save/Print PDF
-                </button>
-                <button type="button" onclick="clearList()" class="btn btn-clear">Clear All List</button>
-            </div>
-        </form>
-    </section>
-
-    <!-- OFFICIAL GEMP FORM - 5 DISPLAY -->
-    <section class="gemp-document">
-        <div class="top-meta">
-            GEMP FORM - 5<br>
-            Region : <input type="text" id="regionInput" placeholder="______">
-        </div>
-
-        <div class="header-section">
-            <h1 class="header-title">GOVERNMENT ENERGY MANAGEMENT PROGRAM (GEMP)</h1>
-            <div class="header-subtitle">INVENTORY OF OTHER OFFICE EQUIPMENT</div>
-            <div class="header-legal">(In compliance with R.A. 11285 and its IRR)</div>
-        </div>
-
-        <div class="agency-info">
-            <div class="field-line">
-                <span class="field-label">Name of Government Agency/Office :</span>
-                <input type="text" id="agencyName" class="field-input">
-            </div>
-            <div class="field-line">
-                <span class="field-label">Address :</span>
-                <input type="text" id="agencyAddress" class="field-input">
-            </div>
-        </div>
-
-        <table class="inventory-table">
-            <thead>
-                <tr>
-                    <th rowspan="2" style="width: 4%;">NO.</th>
-                    <th rowspan="2" style="width: 10%;">ACCOUNT NO.</th>
-                    <th class="th-grey" style="width: 11%;">AREA / ROOM</th>
-                    <th rowspan="2" style="width: 15%;">OFFICE EQUIPMENT TYPE</th>
-                    <th rowspan="2" style="width: 13%;">BRAND/MODEL</th>
-                    <th rowspan="2" style="width: 11%;">STATUS<br><span style="font-weight:normal; text-transform:none;">(Operational/Non-Operational)</span></th>
-                    <th rowspan="2" style="width: 6%;">QUANTITY</th>
-                    <th rowspan="2" style="width: 8%;">RATING (WATTS)</th>
-                    <th colspan="2" style="width: 13%;">OPERATION</th>
-                    <th rowspan="2" style="width: 11%;">ASSIGNED LOCATION</th>
-                    <th rowspan="2" class="action-col" style="width: 6%;">ACTION</th>
-                </tr>
-                <tr>
-                    <th class="th-grey"></th> 
-                    <th>HOURS PER DAY</th>
-                    <th>DAYS PER MONTH</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- Dynamic Rows -->
-            </tbody>
-        </table>
-    </section>
-
-</div>
-
-<script>
-    // Initialize Supabase Client
-    const SUPABASE_URL = "https://fozlnwmobikzlcyzptvh.supabase.co"; 
-    const SUPABASE_KEY = "sb_publishable__a_KwlAK5oMMVKK7avBqaQ_lH8QBY-y"; 
-    
-    // Using supabaseClient to avoid variable name collisions with global window.supabase
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let inventory = [];
-    let editingId = null;
-
-    // Fetch all items from Supabase & verify connection
-    async function fetchInventory() {
-        const statusBanner = document.getElementById('dbStatus');
-
-        const { data, error } = await supabaseClient
-            .from('gemp_inventory')
-            .select('*')
-            .order('account_no', { ascending: true })
-            .order('id', { ascending: true });
-
-        if (error) {
-            console.error('Error fetching inventory:', error);
-            if (statusBanner) {
-                statusBanner.className = 'db-status-banner error';
-                statusBanner.innerHTML = '❌ Failed to connect to Supabase database: ' + error.message;
-            }
-            return;
-        }
-
-        // Connection successful
-        if (statusBanner) {
-            statusBanner.className = 'db-status-banner success';
-            statusBanner.innerHTML = '☑ Connected & synced with Supabase!';
-        }
-
-        inventory = data || [];
-        renderTable();
-    }
-
-    // Insert new item to Supabase
-    async function handleAddEquipment(event) {
-        event.preventDefault();
-
-        const newItem = {
-            account_no: document.getElementById('accountNo').value,
-            name: document.getElementById('eqName').value,
-            brand: document.getElementById('brand').value,
-            area: document.getElementById('area').value,
-            location: document.getElementById('location').value,
-            status: document.getElementById('statusType').value,
-            qty: parseInt(document.getElementById('qty').value) || 1,
-            watts: document.getElementById('watts').value ? parseFloat(document.getElementById('watts').value) : null,
-            hours: document.getElementById('hours').value ? parseFloat(document.getElementById('hours').value) : null,
-            days: document.getElementById('days').value ? parseFloat(document.getElementById('days').value) : null
-        };
-
-        const { error } = await supabaseClient
-            .from('gemp_inventory')
-            .insert([newItem]);
-
-        if (error) {
-            console.error('Error inserting equipment:', error);
-            alert('Failed to add equipment entry: ' + error.message);
-            return;
-        }
-
-        // Reset equipment fields
-        document.getElementById('eqName').value = '';
-        document.getElementById('brand').value = '';
-        document.getElementById('area').value = '';
-        document.getElementById('location').value = '';
-        document.getElementById('watts').value = '';
-        document.getElementById('hours').value = '';
-        document.getElementById('days').value = '';
-        document.getElementById('eqName').focus();
-
-        await fetchInventory();
-    }
-
-    function editInline(id) {
-        editingId = id;
-        renderTable();
-    }
-
-    // Update existing item in Supabase
-    async function saveInline(id) {
-        const row = document.getElementById(`row-${id}`);
+    <!-- VIEW 2: INVENTORY & RECIPES -->
+    <div id="view-inventory" class="h-full hidden p-3 sm:p-6 overflow-y-auto">
+      <div class="max-w-6xl mx-auto space-y-6 sm:space-y-8 pb-14">
         
-        const updatedItem = {
-            account_no: row.querySelector('.edit-account').value,
-            area: row.querySelector('.edit-area').value,
-            name: row.querySelector('.edit-name').value,
-            brand: row.querySelector('.edit-brand').value,
-            status: row.querySelector('.edit-status').value,
-            qty: parseInt(row.querySelector('.edit-qty').value) || 1,
-            watts: row.querySelector('.edit-watts').value ? parseFloat(row.querySelector('.edit-watts').value) : null,
-            hours: row.querySelector('.edit-hours').value ? parseFloat(row.querySelector('.edit-hours').value) : null,
-            days: row.querySelector('.edit-days').value ? parseFloat(row.querySelector('.edit-days').value) : null,
-            location: row.querySelector('.edit-location').value
-        };
+        <!-- SECTION 1: SUPPLIES & INGREDIENTS -->
+        <div class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold text-slate-900" data-i18n="inv_title_1">1. Supplies Inventory: Total, Consumed & Current</h2>
+              <p id="inventory-role-note" class="text-xs text-slate-500" data-i18n="inv_subtitle_1">Edit 'Total' when restocking. 'Consumed' increases from POS orders, and 'Current' balances automatically.</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="add-ing-btn" onclick="openAddIngredientModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 font-bold text-xs text-white rounded-xl shadow-sm hidden active:scale-95">
+                + <span data-i18n="add_supply_btn">Add Supply</span>
+              </button>
+              <button id="change-pin-btn" onclick="openChangePinModal()" class="px-3 py-2 border border-slate-300 bg-white hover:bg-slate-50 font-bold text-xs text-slate-700 rounded-xl shadow-sm hidden active:scale-95" data-i18n="change_pin_btn">
+                Change PIN
+              </button>
+            </div>
+          </div>
 
-        const { error } = await supabaseClient
-            .from('gemp_inventory')
-            .update(updatedItem)
-            .eq('id', id);
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+            <table class="w-full text-left text-sm min-w-[700px]">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-bold uppercase border-b border-slate-200">
+                <tr>
+                  <th class="p-3" data-i18n="th_supply_name">Supply Name</th>
+                  <th class="p-3 text-slate-700" data-i18n="th_total_stock">Total Stock (Editable)</th>
+                  <th class="p-3 text-amber-700" data-i18n="th_consumed">Consumed (Orders Only)</th>
+                  <th class="p-3 text-emerald-700" data-i18n="th_current">Current Remaining</th>
+                  <th class="p-3" data-i18n="th_unit">Unit</th>
+                  <th class="p-3" data-i18n="th_alert">Alert Threshold</th>
+                  <th class="p-3" data-i18n="th_status">Status</th>
+                  <th id="th-ing-action" class="p-3 text-right hidden" data-i18n="th_actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ingredients-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
 
-        if (error) {
-            console.error('Error updating item:', error);
-            alert('Failed to save inline edit: ' + error.message);
-            return;
-        }
+        <!-- SECTION 2: PRODUCTS, RECIPES & UNIT COSTS -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg sm:text-xl font-bold text-slate-900" data-i18n="inv_title_2">2. Lemonade Flavors, Prices & Unit Expense</h2>
+              <p class="text-xs text-slate-500" data-i18n="inv_subtitle_2">Set the Selling Price and Unit Expense (Capital / COGS) per cup to track expenses and profit.</p>
+            </div>
+            <button id="add-flavor-btn" onclick="openAddFlavorModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 font-bold text-xs text-white rounded-xl shadow-sm hidden active:scale-95">
+              + <span data-i18n="add_flavor_btn">Add New Flavor</span>
+            </button>
+          </div>
 
-        editingId = null;
-        await fetchInventory();
-    }
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+            <table class="w-full text-left text-sm min-w-[650px]">
+              <thead class="bg-slate-50 text-slate-600 text-xs font-bold uppercase border-b border-slate-200">
+                <tr>
+                  <th class="p-3" data-i18n="th_flavor_name">Flavor Name</th>
+                  <th class="p-3 text-emerald-700" data-i18n="th_selling_price">Selling Price</th>
+                  <th class="p-3 text-rose-700" data-i18n="th_unit_cost">Cost / Expense (1 Cup)</th>
+                  <th class="p-3 text-blue-700" data-i18n="th_margin">Margin / Cup</th>
+                  <th class="p-3" data-i18n="th_recipe">Recipe Summary</th>
+                  <th class="p-3 text-right" data-i18n="th_recipe_actions">Recipe Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-tbody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
 
-    function cancelInline() {
-        editingId = null;
-        renderTable();
-    }
+      </div>
+    </div>
 
-    // Delete single item from Supabase
-    async function removeItem(id) {
-        if (confirm("Are you sure you want to delete this row?")) {
-            const { error } = await supabaseClient
-                .from('gemp_inventory')
-                .delete()
-                .eq('id', id);
+    <!-- VIEW 3: SALES & EXPENSE DASHBOARD -->
+    <div id="view-analytics" class="h-full hidden p-3 sm:p-6 overflow-y-auto">
+      <div class="max-w-5xl mx-auto space-y-6 pb-14">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900" data-i18n="analytics_title">Revenue, Expense & Net Income Dashboard</h2>
+            <p class="text-xs text-slate-500" data-i18n="analytics_subtitle">Track Gross Revenue, Product Expenses, and Net Profit.</p>
+          </div>
 
-            if (error) {
-                console.error('Error deleting item:', error);
-                alert('Failed to delete item: ' + error.message);
-                return;
-            }
+          <div class="inline-flex bg-slate-200 p-1 rounded-xl text-xs font-bold text-slate-600 flex-wrap">
+            <button id="btn-filter-today" onclick="setTimeFilter('today')" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white text-slate-900 shadow-sm active:scale-95" data-i18n="filter_today">Today</button>
+            <button id="btn-filter-week" onclick="setTimeFilter('week')" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-slate-600 hover:text-slate-900 active:scale-95" data-i18n="filter_week">This Week</button>
+            <button id="btn-filter-month" onclick="setTimeFilter('month')" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-slate-600 hover:text-slate-900 active:scale-95" data-i18n="filter_month">This Month</button>
+            <button id="btn-filter-all" onclick="setTimeFilter('all')" class="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-slate-600 hover:text-slate-900 active:scale-95" data-i18n="filter_all">All Time</button>
+          </div>
+        </div>
 
-            if (editingId === id) editingId = null;
-            await fetchInventory();
-        }
-    }
+        <!-- 3-Pillar Card Dashboard for Filtered Range -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block" data-i18n="card_revenue">Total Revenue (Gross Sales)</span>
+            <div id="filter-stat-revenue" class="text-2xl font-black text-blue-600 mt-1">₱0.00</div>
+            <div id="filter-stat-cups" class="text-xs text-slate-500 mt-0.5">0 cups sold</div>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block" data-i18n="card_expenses">Total Cost (Expenses)</span>
+            <div id="filter-stat-expense" class="text-2xl font-black text-rose-500 mt-1">₱0.00</div>
+            <div class="text-xs text-slate-500 mt-0.5" data-i18n="cost_calc_note">Calculated from flavor unit costs</div>
+          </div>
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block" data-i18n="card_profit">Net Income (Profit)</span>
+            <div id="filter-stat-profit" class="text-2xl font-black text-emerald-600 mt-1">₱0.00</div>
+            <div id="filter-stat-margin" class="text-xs text-emerald-700 font-semibold mt-0.5">0% Profit Margin</div>
+          </div>
+        </div>
 
-    // Clear all rows from Supabase
-    async function clearList() {
-        if (confirm("Are you sure you want to clear all table rows from the database?")) {
-            const { error } = await supabaseClient
-                .from('gemp_inventory')
-                .delete()
-                .neq('id', 0); // Deletes all records
+        <!-- Best Seller Banner -->
+        <div class="bg-gradient-to-r from-amber-500 to-yellow-400 rounded-2xl p-4 sm:p-5 text-white shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center text-2xl sm:text-3xl shadow-inner">🏆</div>
+            <div>
+              <span class="text-xs uppercase font-extrabold tracking-wider text-amber-100" data-i18n="top_seller_badge">Top Best Seller</span>
+              <h3 id="best-seller-name" class="text-xl sm:text-2xl font-black text-white leading-tight">No sales yet</h3>
+              <p id="best-seller-stats" class="text-xs text-amber-100 font-medium">Record orders to discover your #1 product</p>
+            </div>
+          </div>
+          <div id="top-products-summary" class="w-full md:w-auto bg-black/10 backdrop-blur-sm rounded-xl p-3 text-xs flex flex-wrap gap-4 border border-white/10"></div>
+        </div>
 
-            if (error) {
-                console.error('Error clearing list:', error);
-                alert('Failed to clear list: ' + error.message);
-                return;
-            }
+        <!-- Financial Breakdown Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+          <div class="p-3 sm:p-3.5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-xs uppercase text-slate-700" data-i18n="breakdown_title">Financial Breakdown: Revenue vs Expenses by Product</h3>
+              <p class="text-[11px] text-slate-500" data-i18n="breakdown_subtitle">Review total selling price collected, total capital cost spent, and net profit per item.</p>
+            </div>
+            <span id="product-income-filter-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">Today</span>
+          </div>
+          <table class="w-full text-left text-sm min-w-[650px]">
+            <thead class="bg-slate-50 text-slate-600 text-xs font-bold uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-3" data-i18n="th_p_name">Product Name</th>
+                <th class="p-3 text-center" data-i18n="th_p_cups">Cups Sold</th>
+                <th class="p-3" data-i18n="th_p_price">Price / Cup</th>
+                <th class="p-3" data-i18n="th_p_cost">Cost / Cup</th>
+                <th class="p-3 text-blue-700" data-i18n="th_p_revenue">Total Revenue</th>
+                <th class="p-3 text-rose-600" data-i18n="th_p_expenses">Total Cost (Expense)</th>
+                <th class="p-3 text-emerald-700" data-i18n="th_p_profit">Net Profit (Income)</th>
+              </tr>
+            </thead>
+            <tbody id="product-income-tbody" class="divide-y divide-slate-100 text-xs"></tbody>
+            <tfoot class="bg-slate-50 border-t-2 border-slate-300 font-bold text-xs text-slate-900">
+              <tr>
+                <td class="p-3 text-slate-700 uppercase tracking-wider" data-i18n="total_summary_footer">Total Summary</td>
+                <td id="foot-total-cups" class="p-3 text-center text-amber-600 text-sm">0 cups</td>
+                <td class="p-3 text-slate-400">—</td>
+                <td class="p-3 text-slate-400">—</td>
+                <td id="foot-total-income" class="p-3 text-blue-600 text-sm font-black">₱0.00</td>
+                <td id="foot-total-expense" class="p-3 text-rose-600 text-sm font-black">₱0.00</td>
+                <td id="foot-total-profit" class="p-3 text-emerald-600 text-sm font-black">₱0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
 
-            editingId = null;
-            await fetchInventory();
-        }
-    }
+        <!-- Orders Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto">
+          <div class="p-3 sm:p-3.5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-xs uppercase text-slate-600" data-i18n="tx_log_title">Transactions Log</h3>
+              <span id="filtered-range-label" class="text-[11px] px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold">Today</span>
+            </div>
+            <button id="reset-logs-btn" onclick="clearSalesHistory()" class="text-xs text-rose-500 hover:underline hidden" data-i18n="reset_logs_btn">
+              Reset Logs (Owner Only)
+            </button>
+          </div>
+          <table class="w-full text-left text-sm min-w-[500px]">
+            <thead class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase border-b border-slate-200">
+              <tr>
+                <th class="p-3" data-i18n="th_date_time">Date & Time</th>
+                <th class="p-3" data-i18n="th_items_ordered">Items Ordered</th>
+                <th class="p-3" data-i18n="th_total_amount">Total Amount</th>
+                <th class="p-3" data-i18n="th_cash_paid">Cash Paid</th>
+                <th class="p-3" data-i18n="th_change">Change</th>
+              </tr>
+            </thead>
+            <tbody id="sales-tbody" class="divide-y divide-slate-100 text-xs"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    function renderTable() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
+  <!-- MODALS -->
+  <div id="store-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div>
+        <h3 class="font-bold text-base text-slate-800" data-i18n="modal_store_title">Customize Store Name</h3>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="modal_store_subtitle">Enter the business name to display across the POS and reports.</p>
+      </div>
+      <div>
+        <input type="text" id="store-name-input" placeholder="e.g. Sunny Sips Lemonade Cafe"
+          class="w-full border border-slate-300 rounded-xl p-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closeStoreNameModal()" class="flex-1 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 active:bg-slate-100" data-i18n="cancel_btn">Cancel</button>
+        <button onclick="saveStoreName()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-bold text-white shadow-sm active:scale-95" data-i18n="save_store_btn">Save Store Name</button>
+      </div>
+    </div>
+  </div>
 
-        if (inventory.length === 0) {
-            const emptyRow = document.createElement('tr');
-            emptyRow.innerHTML = `<td colspan="12" style="padding: 20px; color: #888; font-style: italic;">No equipment items added yet. Fill out the form above to populate data.</td>`;
-            tbody.appendChild(emptyRow);
-            return;
-        }
+  <div id="pin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
+      <div class="text-center">
+        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">🔐</div>
+        <h3 class="font-bold text-base text-slate-800 mt-2" data-i18n="owner_auth_title">Owner Authentication</h3>
+        <p class="text-xs text-slate-500 mt-0.5" data-i18n="owner_auth_desc">Enter Owner PIN to unlock editing & restock.</p>
+      </div>
+      <div>
+        <input type="password" id="owner-pin-input" maxlength="10" placeholder="Default PIN: 1234"
+          class="w-full text-center text-xl font-bold tracking-widest border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closePinModal()" class="flex-1 py-3 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 active:bg-slate-100" data-i18n="cancel_btn">Cancel</button>
+        <button onclick="submitPin()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-bold text-white shadow-sm active:scale-95" data-i18n="unlock_btn">Unlock</button>
+      </div>
+    </div>
+  </div>
 
-        let itemCounter = 1;
+  <div id="change-pin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl space-y-4">
+      <h3 class="font-bold text-base text-slate-800" data-i18n="change_pin_title">Change Owner PIN</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-600" data-i18n="new_pin_label">New PIN:</label>
+          <input type="password" id="new-pin-input" maxlength="10" placeholder="Enter new PIN" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-1">
+        <button onclick="closeChangePinModal()" class="flex-1 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 active:bg-slate-100" data-i18n="cancel_btn">Cancel</button>
+        <button onclick="saveNewPin()" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-bold text-white shadow-sm active:scale-95" data-i18n="save_pin_btn">Save PIN</button>
+      </div>
+    </div>
+  </div>
 
-        inventory.forEach((item) => {
-            const row = document.createElement('tr');
-            row.id = `row-${item.id}`;
+  <div id="ingredient-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <h3 class="font-bold text-base text-slate-800" data-i18n="add_supply_modal_title">Add Supply / Ingredient</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-600" data-i18n="supply_name_label">Supply Name:</label>
+          <input type="text" id="modal-ing-name" placeholder="e.g. Lime Slices, 22oz Cups" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-slate-600" data-i18n="total_purchased_label">Total Purchased Stock:</label>
+            <input type="number" id="modal-ing-total" placeholder="200" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600" data-i18n="unit_label">Unit:</label>
+            <input type="text" id="modal-ing-unit" placeholder="pcs, ml, bottles" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-slate-600" data-i18n="alert_th_label">Low Stock Alert Threshold:</label>
+          <input type="number" id="modal-ing-alert" placeholder="30" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAddIngredientModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 active:bg-slate-100" data-i18n="cancel_btn">Cancel</button>
+        <button onclick="saveNewIngredient()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-bold text-white shadow-sm active:scale-95" data-i18n="save_supply_btn">Save Supply</button>
+      </div>
+    </div>
+  </div>
 
-            // Check if this row is being edited inline
-            if (editingId === item.id) {
-                row.innerHTML = `
-                    <td>${itemCounter++}</td>
-                    <td><input type="text" class="table-inline-input edit-account" value="${item.account_no || ''}"></td>
-                    <td><input type="text" class="table-inline-input edit-area" value="${item.area || ''}"></td>
-                    <td><input type="text" class="table-inline-input edit-name" value="${item.name || ''}"></td>
-                    <td><input type="text" class="table-inline-input edit-brand" value="${item.brand || ''}"></td>
-                    <td>
-                        <select class="table-inline-input edit-status">
-                            <option value="Operational" ${item.status === 'Operational' ? 'selected' : ''}>Operational</option>
-                            <option value="Non-Operational" ${item.status === 'Non-Operational' ? 'selected' : ''}>Non-Operational</option>
-                        </select>
-                    </td>
-                    <td><input type="number" class="table-inline-input edit-qty" value="${item.qty || 1}"></td>
-                    <td><input type="number" class="table-inline-input edit-watts" value="${item.watts ?? ''}"></td>
-                    <td><input type="number" class="table-inline-input edit-hours" value="${item.hours ?? ''}"></td>
-                    <td><input type="number" class="table-inline-input edit-days" value="${item.days ?? ''}"></td>
-                    <td><input type="text" class="table-inline-input edit-location" value="${item.location || ''}"></td>
-                    <td class="action-cell">
-                        <button class="btn-action-save" title="Save Row" onclick="saveInline(${item.id})">💾</button>
-                        <button class="btn-action-cancel" title="Cancel" onclick="cancelInline()">✕</button>
-                    </td>
-                `;
-            } else {
-                row.innerHTML = `
-                    <td>${itemCounter++}</td>
-                    <td style="font-weight: bold;">${item.account_no || ''}</td>
-                    <td>${item.area || ''}</td>
-                    <td style="font-weight: bold;">${item.name || ''}</td>
-                    <td>${item.brand || ''}</td>
-                    <td>${item.status || ''}</td>
-                    <td>${item.qty || ''}</td>
-                    <td>${item.watts ?? ''}</td>
-                    <td>${item.hours ?? ''}</td>
-                    <td>${item.days ?? ''}</td>
-                    <td>${item.location || ''}</td>
-                    <td class="action-cell">
-                        <button class="btn-action-edit" title="Edit Inline" onclick="editInline(${item.id})">✏️</button>
-                        <button class="btn-action-delete" title="Delete Row" onclick="removeItem(${item.id})">✕</button>
-                    </td>
-                `;
-            }
+  <div id="flavor-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <h3 class="font-bold text-base text-slate-800" data-i18n="add_flavor_modal_title">Add New Lemonade Flavor</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-600" data-i18n="flavor_name_label">Flavor Name:</label>
+          <input type="text" id="modal-flavor-name" placeholder="e.g. Mango Lemonade" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-slate-600" data-i18n="flavor_price_label">Selling Price (₱):</label>
+            <input type="number" id="modal-flavor-price" placeholder="50.00" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600" data-i18n="flavor_cost_label">Cost / Expense (₱):</label>
+            <input type="number" id="modal-flavor-cost" placeholder="18.00" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm mt-1 focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeAddFlavorModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 active:bg-slate-100" data-i18n="cancel_btn">Cancel</button>
+        <button onclick="saveNewFlavor()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 rounded-xl text-xs font-bold text-white shadow-sm active:scale-95" data-i18n="save_flavor_btn">Save Flavor</button>
+      </div>
+    </div>
+  </div>
 
-            tbody.appendChild(row);
-        });
-    }
+  <div id="recipe-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+      <div>
+        <h3 id="recipe-modal-title" class="font-bold text-base text-slate-800">Edit Recipe</h3>
+        <p class="text-xs text-slate-500" data-i18n="recipe_modal_sub">Select which ingredients and quantities are consumed for 1 cup.</p>
+      </div>
+      
+      <div id="recipe-rows-container" class="space-y-2 overflow-y-auto flex-1 pr-1"></div>
 
-    // Fetch data on page load
-    window.addEventListener('DOMContentLoaded', () => {
-        fetchInventory();
+      <button onclick="addRecipeRow()" class="w-full py-2.5 border border-dashed border-amber-500 text-amber-700 bg-amber-50/50 hover:bg-amber-50 rounded-xl text-xs font-bold active:scale-98">
+        + <span data-i18n="add_ing_to_recipe_btn">Add Ingredient to Recipe</span>
+      </button>
+
+      <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <button onclick="closeRecipeModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 active:bg-slate-100" data-i18n="cancel_btn">Cancel</button>
+        <button onclick="saveRecipeChanges()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white shadow-sm active:scale-95" data-i18n="save_recipe_btn">Save Recipe</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // I18N DICTIONARY (English & Tagalog)
+    const TRANSLATIONS = {
+      en: {
+        subtitle: "Adaptive POS, Inventory & Profit Engine",
+        rename: "Rename",
+        tab_pos: "POS",
+        tab_inventory: "Stock & Cost",
+        tab_income: "Income & Expenses",
+        seller_mode: "Seller Mode",
+        owner_mode: "Owner Mode",
+        select_flavor: "Select Lemonade Flavor",
+        flavors_available: "Flavors Available",
+        customer_order: "Customer Order",
+        clear_cart: "Clear Cart",
+        total_due: "Total Due:",
+        exact: "Exact",
+        cash_tendered: "Cash Tendered",
+        change_due: "Change",
+        clear_btn: "CLEAR",
+        empty_cart: "Tap flavors to add to order.",
+        complete_order: "Complete Order",
+        insufficient: "Insufficient",
+        paid_label: "Paid:",
+        inv_title_1: "1. Supplies Inventory: Total, Consumed & Current",
+        inv_subtitle_1: "Edit 'Total' when restocking. 'Consumed' increases from POS orders, and 'Current' balances automatically.",
+        add_supply_btn: "Add Supply",
+        change_pin_btn: "Change PIN",
+        th_supply_name: "Supply Name",
+        th_total_stock: "Total Stock (Editable)",
+        th_consumed: "Consumed (Orders Only)",
+        th_current: "Current Remaining",
+        th_unit: "Unit",
+        th_alert: "Alert Threshold",
+        th_status: "Status",
+        th_actions: "Actions",
+        status_low: "Low Stock - Reorder",
+        status_ok: "Sufficient",
+        inv_title_2: "2. Lemonade Flavors, Prices & Unit Expense",
+        inv_subtitle_2: "Set the Selling Price and Unit Expense (Capital / COGS) per cup to track expenses and profit.",
+        add_flavor_btn: "Add New Flavor",
+        th_flavor_name: "Flavor Name",
+        th_selling_price: "Selling Price",
+        th_unit_cost: "Cost / Expense (1 Cup)",
+        th_margin: "Margin / Cup",
+        th_recipe: "Recipe Summary",
+        th_recipe_actions: "Recipe Actions",
+        edit_recipe_btn: "Edit Recipe",
+        delete_btn: "Delete",
+        locked_label: "Locked",
+        analytics_title: "Revenue, Expense & Net Income Dashboard",
+        analytics_subtitle: "Track Gross Revenue, Product Expenses, and Net Profit.",
+        filter_today: "Today",
+        filter_week: "This Week",
+        filter_month: "This Month",
+        filter_all: "All Time",
+        card_revenue: "Total Revenue (Gross Sales)",
+        card_expenses: "Total Cost (Expenses)",
+        card_profit: "Net Income (Profit)",
+        cost_calc_note: "Calculated from flavor unit costs",
+        profit_margin_label: "Profit Margin",
+        cups_sold: "cups sold",
+        top_seller_badge: "Top Best Seller",
+        no_sales_yet: "No sales yet",
+        record_orders_tip: "Record orders to discover your #1 product",
+        no_products_period: "No product sales in this period",
+        breakdown_title: "Financial Breakdown: Revenue vs Expenses by Product",
+        breakdown_subtitle: "Review total selling price collected, total capital cost spent, and net profit per item.",
+        th_p_name: "Product Name",
+        th_p_cups: "Cups Sold",
+        th_p_price: "Price / Cup",
+        th_p_cost: "Cost / Cup",
+        th_p_revenue: "Total Revenue",
+        th_p_expenses: "Total Cost (Expense)",
+        th_p_profit: "Net Profit (Income)",
+        total_summary_footer: "Total Summary",
+        tx_log_title: "Transactions Log",
+        reset_logs_btn: "Reset Logs (Owner Only)",
+        th_date_time: "Date & Time",
+        th_items_ordered: "Items Ordered",
+        th_total_amount: "Total Amount",
+        th_cash_paid: "Cash Paid",
+        th_change: "Change",
+        modal_store_title: "Customize Store Name",
+        modal_store_subtitle: "Enter the business name to display across the POS and reports.",
+        save_store_btn: "Save Store Name",
+        cancel_btn: "Cancel",
+        owner_auth_title: "Owner Authentication",
+        owner_auth_desc: "Enter Owner PIN to unlock editing & restock.",
+        unlock_btn: "Unlock",
+        change_pin_title: "Change Owner PIN",
+        new_pin_label: "New PIN:",
+        save_pin_btn: "Save PIN",
+        add_supply_modal_title: "Add Supply / Ingredient",
+        supply_name_label: "Supply Name:",
+        total_purchased_label: "Total Purchased Stock:",
+        unit_label: "Unit:",
+        alert_th_label: "Low Stock Alert Threshold:",
+        save_supply_btn: "Save Supply",
+        add_flavor_modal_title: "Add New Lemonade Flavor",
+        flavor_name_label: "Flavor Name:",
+        flavor_price_label: "Selling Price (₱):",
+        flavor_cost_label: "Cost / Expense (₱):",
+        save_flavor_btn: "Save Flavor",
+        recipe_modal_sub: "Select which ingredients and quantities are consumed for 1 cup.",
+        add_ing_to_recipe_btn: "Add Ingredient to Recipe",
+        save_recipe_btn: "Save Recipe"
+      },
+      tl: {
+        subtitle: "Mabilis na POS, Imbentaryo at Kitaan",
+        rename: "Palitan",
+        tab_pos: "Tindahan",
+        tab_inventory: "Imbentaryo at Gastos",
+        tab_income: "Kita at Gastusin",
+        seller_mode: "Modo ng Tindero",
+        owner_mode: "Modo ng May-ari",
+        select_flavor: "Pumili ng Lasang Lemonade",
+        flavors_available: "mga Flavour na Pwede",
+        customer_order: "Order ng Kostumer",
+        clear_cart: "Alisin Lahat",
+        total_due: "Kabuuang Babayaran:",
+        exact: "Sakto",
+        cash_tendered: "Bayad na Pera",
+        change_due: "Sukli",
+        clear_btn: "BURAHIN",
+        empty_cart: "Pumili ng lemonade para magdagdag ng order.",
+        complete_order: "Kumpirmahin ang Order",
+        insufficient: "Kulang ang Bayad",
+        paid_label: "Binayad:",
+        inv_title_1: "1. Imbentaryo ng Gamit: Kabuuan, Nagamit at Natira",
+        inv_subtitle_1: "I-edit ang 'Kabuuan' kapag nag-deliver. Ang 'Nagamit' ay kusa batay sa order, at ang 'Natitira' ay awtomatikong binabawas.",
+        add_supply_btn: "Magdagdag ng Gamit",
+        change_pin_btn: "Palitan ang PIN",
+        th_supply_name: "Pangalan ng Gamit",
+        th_total_stock: "Kabuuang Stock (Maaaring I-edit)",
+        th_consumed: "Nagamit (Sa Benta Lamang)",
+        th_current: "Natitirang Stock",
+        th_unit: "Yunit",
+        th_alert: "Banta sa Paubos",
+        th_status: "Katayuan",
+        th_actions: "Aksyon",
+        status_low: "Kulang na - Bumili Na",
+        status_ok: "Sapat Pa",
+        inv_title_2: "2. Mga Produkto, Presyo at Gastos Kada Baso",
+        inv_subtitle_2: "Itakda ang Presyo ng Benta at Puhunan (Gastos) kada baso upang matutukan ang bawas at tunay na kita.",
+        add_flavor_btn: "Bagong Flavour",
+        th_flavor_name: "Pangalan ng Flavour",
+        th_selling_price: "Presyo ng Benta",
+        th_unit_cost: "Puhunan / Gastos (1 Baso)",
+        th_margin: "Tubo kada Baso",
+        th_recipe: "Sangkap ng Resipe",
+        th_recipe_actions: "Aksyon sa Resipe",
+        edit_recipe_btn: "I-edit ang Resipe",
+        delete_btn: "Tanggalin",
+        locked_label: "Naka-lock",
+        analytics_title: "Dashboard ng Benta, Gastos at Netong Kita",
+        analytics_subtitle: "Subaybayan ang Kabuuang Benta, Gastos sa Sangkap, at Netong Tubo.",
+        filter_today: "Ngayong Araw",
+        filter_week: "Ngayong Linggo",
+        filter_month: "Ngayong Buwan",
+        filter_all: "Kabuuan (Lahat)",
+        card_revenue: "Kabuuang Benta (Gross Sales)",
+        card_expenses: "Kabuuang Gastos (Puhunan)",
+        card_profit: "Netong Kita (Tunay na Tubo)",
+        cost_calc_note: "Kinalkula mula sa puhunan ng bawat baso",
+        profit_margin_label: "Bahagdan ng Tubo",
+        cups_sold: "basong naibenta",
+        top_seller_badge: "Pinakamabenta (Top 1)",
+        no_sales_yet: "Wala pang benta",
+        record_orders_tip: "Maglista ng benta para makita ang numero 1 produkto",
+        no_products_period: "Walang benta sa panahong ito",
+        breakdown_title: "Ulat Pinansyal: Benta vs Gastos kada Produkto",
+        breakdown_subtitle: "Suriin ang kabuuang pumasok na pera, nagastos na kapital, at netong tubo bawat produkto.",
+        th_p_name: "Pangalan ng Produkto",
+        th_p_cups: "Naibenta",
+        th_p_price: "Presyo/Baso",
+        th_p_cost: "Gastos/Baso",
+        th_p_revenue: "Kabuuang Benta",
+        th_p_expenses: "Kabuuang Gastos",
+        th_p_profit: "Netong Tubo",
+        total_summary_footer: "Kabuuang Buod",
+        tx_log_title: "Talaan ng mga Transaksyon",
+        reset_logs_btn: "I-reset ang Log (May-ari Lamang)",
+        th_date_time: "Petsa at Oras",
+        th_items_ordered: "Mga In-order",
+        th_total_amount: "Kabuuang Halaga",
+        th_cash_paid: "Pera na Binayad",
+        th_change: "Sukli",
+        modal_store_title: "I-customize ang Pangalan ng Tindahan",
+        modal_store_subtitle: "Ilagay ang pangalan ng negosyo na ipapakita sa POS at ulat.",
+        save_store_btn: "I-save ang Pangalan",
+        cancel_btn: "Kanselahin",
+        owner_auth_title: "Pagpapatunay ng May-ari",
+        owner_auth_desc: "Ilagay ang Owner PIN upang buksan ang pag-edit at restock.",
+        unlock_btn: "Buksan",
+        change_pin_title: "Palitan ang Owner PIN",
+        new_pin_label: "Bagong PIN:",
+        save_pin_btn: "I-save ang PIN",
+        add_supply_modal_title: "Magdagdag ng Sangkap / Gamit",
+        supply_name_label: "Pangalan ng Gamit:",
+        total_purchased_label: "Kabuuang Biniling Stock:",
+        unit_label: "Yunit:",
+        alert_th_label: "Banta sa Paubos na Bilang:",
+        save_supply_btn: "I-save ang Sangkap",
+        add_flavor_modal_title: "Magdagdag ng Bagong Flavour",
+        flavor_name_label: "Pangalan ng Flavour:",
+        flavor_price_label: "Presyo ng Benta (₱):",
+        flavor_cost_label: "Puhunan / Gastos (₱):",
+        save_flavor_btn: "I-save ang Flavour",
+        recipe_modal_sub: "Piliin kung anong sangkap at gaano karami ang nagagamit sa 1 baso.",
+        add_ing_to_recipe_btn: "Magdagdag ng Sangkap sa Resipe",
+        save_recipe_btn: "I-save ang Resipe"
+      }
+    };
+
+    const DEFAULT_STORE_NAME = "Citrus Glow Lemonade Bar";
+
+    const DEFAULT_INGREDIENTS = [
+      { id: 1, name: "16oz Cups", totalStock: 200, consumed: 0, unit: "pcs", alert: 30 },
+      { id: 2, name: "Straws", totalStock: 250, consumed: 0, unit: "pcs", alert: 30 },
+      { id: 3, name: "Fresh Lemons", totalStock: 150, consumed: 0, unit: "pcs", alert: 20 },
+      { id: 4, name: "Sugar Syrup", totalStock: 3000, consumed: 0, unit: "ml", alert: 500 },
+      { id: 5, name: "Blueberry Puree", totalStock: 1000, consumed: 0, unit: "ml", alert: 200 },
+      { id: 6, name: "Strawberry Puree", totalStock: 1000, consumed: 0, unit: "ml", alert: 200 },
+      { id: 7, name: "Yakult", totalStock: 50, consumed: 0, unit: "bottles", alert: 10 },
+      { id: 8, name: "Honey Ginger Syrup", totalStock: 800, consumed: 0, unit: "ml", alert: 150 }
+    ];
+
+    const DEFAULT_PRODUCTS = [
+      {
+        id: 1, name: "Classic Fresh Lemonade", price: 40, cost: 15,
+        recipe: [{ ingId: 1, qty: 1 }, { ingId: 2, qty: 1 }, { ingId: 3, qty: 2 }, { ingId: 4, qty: 30 }]
+      },
+      {
+        id: 2, name: "Blueberry Lemonade", price: 55, cost: 22,
+        recipe: [{ ingId: 1, qty: 1 }, { ingId: 2, qty: 1 }, { ingId: 3, qty: 1 }, { ingId: 4, qty: 20 }, { ingId: 5, qty: 35 }]
+      },
+      {
+        id: 3, name: "Strawberry Lemonade", price: 55, cost: 22,
+        recipe: [{ ingId: 1, qty: 1 }, { ingId: 2, qty: 1 }, { ingId: 3, qty: 1 }, { ingId: 4, qty: 20 }, { ingId: 6, qty: 35 }]
+      },
+      {
+        id: 4, name: "Cucumber Mint Lemonade", price: 50, cost: 18,
+        recipe: [{ ingId: 1, qty: 1 }, { ingId: 2, qty: 1 }, { ingId: 3, qty: 1 }, { ingId: 4, qty: 25 }]
+      },
+      {
+        id: 5, name: "Yakult Lemonade", price: 65, cost: 26,
+        recipe: [{ ingId: 1, qty: 1 }, { ingId: 2, qty: 1 }, { ingId: 3, qty: 1 }, { ingId: 7, qty: 1 }]
+      },
+      {
+        id: 6, name: "Honey Ginger Lemonade", price: 60, cost: 24,
+        recipe: [{ ingId: 1, qty: 1 }, { ingId: 2, qty: 1 }, { ingId: 3, qty: 1 }, { ingId: 8, qty: 30 }]
+      }
+    ];
+
+    // Language state
+    let currentLang = localStorage.getItem("lemonade_language") || "en";
+
+    let storeName = localStorage.getItem("lemonade_store_name") || DEFAULT_STORE_NAME;
+    let rawIngredients = localStorage.getItem("lemonade_ingredients");
+    let ingredients = rawIngredients ? JSON.parse(rawIngredients) : DEFAULT_INGREDIENTS;
+    
+    ingredients.forEach(i => {
+      if (typeof i.totalStock === 'undefined') i.totalStock = i.stock || 0;
+      if (typeof i.consumed === 'undefined') i.consumed = 0;
     });
-</script>
 
+    let rawProducts = localStorage.getItem("lemonade_products_bom");
+    let products = rawProducts ? JSON.parse(rawProducts) : DEFAULT_PRODUCTS;
+    
+    products.forEach(p => {
+      if (typeof p.cost === 'undefined') p.cost = Math.round(p.price * 0.4);
+    });
+
+    let salesHistory = JSON.parse(localStorage.getItem("lemonade_sales")) || [];
+    let ownerPin = localStorage.getItem("lemonade_owner_pin") || "1234";
+    let isOwnerUnlocked = false;
+    let currentTimeFilter = "today";
+    let cart = [];
+    let currentEditingProductId = null;
+    let enteredTenderAmount = "";
+    let currentScale = parseFloat(localStorage.getItem("lemonade_screen_scale")) || 1.0;
+
+    function t(key) {
+      return TRANSLATIONS[currentLang][key] || TRANSLATIONS['en'][key] || key;
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'en' ? 'tl' : 'en';
+      localStorage.setItem("lemonade_language", currentLang);
+      applyTranslations();
+      renderPOSProducts();
+      renderCart();
+      renderIngredientsTable();
+      renderProductsTable();
+      renderAnalytics();
+      updateOwnerUI();
+    }
+
+    function applyTranslations() {
+      document.getElementById("lang-indicator").innerText = currentLang.toUpperCase();
+      document.querySelectorAll("[data-i18n]").forEach(elem => {
+        const key = elem.getAttribute("data-i18n");
+        if (key && TRANSLATIONS[currentLang][key]) {
+          elem.innerText = TRANSLATIONS[currentLang][key];
+        }
+      });
+    }
+
+    function saveState() {
+      localStorage.setItem("lemonade_store_name", storeName);
+      localStorage.setItem("lemonade_ingredients", JSON.stringify(ingredients));
+      localStorage.setItem("lemonade_products_bom", JSON.stringify(products));
+      localStorage.setItem("lemonade_sales", JSON.stringify(salesHistory));
+      localStorage.setItem("lemonade_screen_scale", currentScale.toString());
+      localStorage.setItem("lemonade_language", currentLang);
+    }
+
+    function applyScale() {
+      const container = document.getElementById("app-scale-container");
+      container.style.transform = `scale(${currentScale})`;
+      container.style.height = `${100 / currentScale}%`;
+      container.style.width = `${100 / currentScale}%`;
+      document.getElementById("scale-indicator").innerText = `${Math.round(currentScale * 100)}%`;
+      saveState();
+    }
+
+    function adjustScale(delta) {
+      currentScale = Math.min(1.3, Math.max(0.75, currentScale + delta));
+      applyScale();
+    }
+
+    function resetScale() {
+      currentScale = 1.0;
+      applyScale();
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => alert("Fullscreen not supported or blocked by browser"));
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    function renderStoreName() {
+      document.getElementById("store-display-name").innerText = storeName;
+      document.getElementById("page-title").innerText = storeName;
+    }
+
+    function openStoreNameModal() {
+      if (!isOwnerUnlocked) return;
+      document.getElementById("store-name-input").value = storeName;
+      document.getElementById("store-modal").classList.remove("hidden");
+      document.getElementById("store-modal").classList.add("flex");
+      document.getElementById("store-name-input").focus();
+    }
+
+    function closeStoreNameModal() {
+      document.getElementById("store-modal").classList.add("hidden");
+      document.getElementById("store-modal").classList.remove("flex");
+    }
+
+    function saveStoreName() {
+      const val = document.getElementById("store-name-input").value.trim();
+      if (!val) {
+        alert(currentLang === 'en' ? "Store name cannot be empty." : "Hindi pwedeng blangko ang pangalan ng tindahan.");
+        return;
+      }
+      storeName = val;
+      saveState();
+      renderStoreName();
+      closeStoreNameModal();
+      alert(currentLang === 'en' ? "✅ Store name updated!" : "✅ Na-update ang pangalan ng tindahan!");
+    }
+
+    function toggleOwnerAuth() {
+      if (isOwnerUnlocked) {
+        isOwnerUnlocked = false;
+        updateOwnerUI();
+        alert(currentLang === 'en' ? "🔒 Locked back to Seller Mode." : "🔒 Naka-lock na muli sa Modo ng Tindero.");
+      } else {
+        document.getElementById("owner-pin-input").value = "";
+        document.getElementById("pin-modal").classList.remove("hidden");
+        document.getElementById("pin-modal").classList.add("flex");
+        document.getElementById("owner-pin-input").focus();
+      }
+    }
+
+    function closePinModal() {
+      document.getElementById("pin-modal").classList.add("hidden");
+      document.getElementById("pin-modal").classList.remove("flex");
+    }
+
+    function submitPin() {
+      const entered = document.getElementById("owner-pin-input").value.trim();
+      if (entered === ownerPin) {
+        isOwnerUnlocked = true;
+        closePinModal();
+        updateOwnerUI();
+        alert(currentLang === 'en' ? "🔓 Owner Access Unlocked!" : "🔓 Nabuksan ang Modo ng May-ari!");
+      } else {
+        alert(currentLang === 'en' ? "❌ Incorrect PIN. Access denied." : "❌ Maling PIN. Hindi mabubuksan.");
+      }
+    }
+
+    function updateOwnerUI() {
+      const authBtn = document.getElementById("auth-status-btn");
+      const lockIcon = document.getElementById("lock-icon");
+      const lockText = document.getElementById("lock-text");
+      const editStoreBtn = document.getElementById("edit-store-btn");
+      const addIngBtn = document.getElementById("add-ing-btn");
+      const addFlavorBtn = document.getElementById("add-flavor-btn");
+      const changePinBtn = document.getElementById("change-pin-btn");
+      const resetLogsBtn = document.getElementById("reset-logs-btn");
+      const ingActionTh = document.getElementById("th-ing-action");
+      const roleNote = document.getElementById("inventory-role-note");
+
+      if (isOwnerUnlocked) {
+        authBtn.className = "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm flex items-center gap-1.5 transition active:scale-95";
+        lockIcon.innerText = "🔓";
+        lockText.innerText = t("owner_mode");
+        editStoreBtn.classList.remove("hidden");
+        addIngBtn.classList.remove("hidden");
+        addFlavorBtn.classList.remove("hidden");
+        changePinBtn.classList.remove("hidden");
+        resetLogsBtn.classList.remove("hidden");
+        ingActionTh.classList.remove("hidden");
+        roleNote.innerText = currentLang === 'en' 
+          ? "Owner Mode: Full access to restock 'Total Stock', edit Flavor Selling Prices, and define Product Expenses (Cost/Cup)."
+          : "Modo ng May-ari: Maaaring mag-restock sa 'Kabuuang Stock', magpalit ng Presyo at Gastos/Puhunan bawat baso.";
+      } else {
+        authBtn.className = "px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl text-xs font-bold border border-amber-600/40 bg-amber-500/20 text-amber-950 flex items-center gap-1.5 transition active:scale-95";
+        lockIcon.innerText = "🔒";
+        lockText.innerText = t("seller_mode");
+        editStoreBtn.classList.add("hidden");
+        addIngBtn.classList.add("hidden");
+        addFlavorBtn.classList.add("hidden");
+        changePinBtn.classList.add("hidden");
+        resetLogsBtn.classList.add("hidden");
+        ingActionTh.classList.add("hidden");
+        roleNote.innerText = currentLang === 'en'
+          ? "Viewing mode: Cashier (View-only)"
+          : "Modo ng Tindero: Pambenta lamang (Bawal magbago ng datos)";
+      }
+
+      renderIngredientsTable();
+      renderProductsTable();
+    }
+
+    function openChangePinModal() {
+      if (!isOwnerUnlocked) return;
+      document.getElementById("new-pin-input").value = "";
+      document.getElementById("change-pin-modal").classList.remove("hidden");
+      document.getElementById("change-pin-modal").classList.add("flex");
+    }
+
+    function closeChangePinModal() {
+      document.getElementById("change-pin-modal").classList.add("hidden");
+      document.getElementById("change-pin-modal").classList.remove("flex");
+    }
+
+    function saveNewPin() {
+      const newPin = document.getElementById("new-pin-input").value.trim();
+      if (newPin.length < 4) {
+        alert(currentLang === 'en' ? "PIN must be at least 4 digits long." : "Ang PIN ay dapat hindi bababa sa 4 na numero.");
+        return;
+      }
+      ownerPin = newPin;
+      localStorage.setItem("lemonade_owner_pin", ownerPin);
+      alert(currentLang === 'en' ? "✅ Owner PIN updated successfully!" : "✅ Na-save ang bagong Owner PIN!");
+      closeChangePinModal();
+    }
+
+    function switchView(viewName) {
+      document.getElementById('view-pos').classList.add('hidden');
+      document.getElementById('view-inventory').classList.add('hidden');
+      document.getElementById('view-analytics').classList.add('hidden');
+
+      document.getElementById('tab-pos-btn').className = "px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-amber-900 hover:text-amber-950 transition active:scale-95";
+      document.getElementById('tab-inventory-btn').className = "px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-amber-900 hover:text-amber-950 transition active:scale-95";
+      document.getElementById('tab-analytics-btn').className = "px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold text-amber-900 hover:text-amber-950 transition active:scale-95";
+
+      if (viewName === 'pos') {
+        document.getElementById('view-pos').classList.remove('hidden');
+        document.getElementById('tab-pos-btn').className = "px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold bg-white text-amber-950 shadow-sm transition active:scale-95";
+        renderPOSProducts();
+      } else if (viewName === 'inventory') {
+        document.getElementById('view-inventory').classList.remove('hidden');
+        document.getElementById('tab-inventory-btn').className = "px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold bg-white text-amber-950 shadow-sm transition active:scale-95";
+        renderIngredientsTable();
+        renderProductsTable();
+      } else if (viewName === 'analytics') {
+        document.getElementById('view-analytics').classList.remove('hidden');
+        document.getElementById('tab-analytics-btn').className = "px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-bold bg-white text-amber-950 shadow-sm transition active:scale-95";
+        renderAnalytics();
+      }
+    }
+
+    function renderPOSProducts() {
+      const grid = document.getElementById("product-grid");
+      grid.innerHTML = "";
+      document.getElementById("pos-product-count").innerText = `${products.length}${t("flavors_available")}`;
+
+      products.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "p-2.5 sm:p-3.5 rounded-2xl border border-slate-200 bg-white hover:border-amber-400 hover:shadow-md flex flex-col justify-between cursor-pointer transition active:scale-95 min-h-[95px] sm:min-h-[110px]";
+        card.innerHTML = `
+          <div>
+            <span class="font-extrabold text-xs sm:text-sm text-slate-800 leading-snug">${p.name}</span>
+          </div>
+          <div class="mt-2.5 flex items-center justify-between">
+            <span class="text-sm sm:text-base font-black text-amber-600 font-mono">₱${p.price.toFixed(2)}</span>
+            <span class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500 hover:bg-amber-400 text-white font-extrabold flex items-center justify-center text-sm sm:text-base shadow-sm">+</span>
+          </div>
+        `;
+        card.onclick = () => addToCart(p);
+        grid.appendChild(card);
+      });
+    }
+
+    function addToCart(product) {
+      const existing = cart.find(item => item.id === product.id);
+      if (existing) existing.qty++;
+      else cart.push({ id: product.id, name: product.name, price: product.price, cost: product.cost || 0, qty: 1 });
+      renderCart();
+    }
+
+    function modifyCartQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+      renderCart();
+    }
+
+    function clearCart() {
+      cart = [];
+      enteredTenderAmount = "";
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById("cart-list");
+      container.innerHTML = "";
+      let total = 0;
+
+      if (cart.length === 0) {
+        container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs italic py-4">${t("empty_cart")}</div>`;
+      }
+
+      cart.forEach(item => {
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+
+        const row = document.createElement("div");
+        row.className = "py-2 sm:py-2.5 flex items-center justify-between";
+        row.innerHTML = `
+          <div class="pr-2">
+            <div class="text-xs font-extrabold text-slate-800 leading-tight">${item.name}</div>
+            <div class="text-[10px] sm:text-[11px] text-slate-400 font-mono">₱${item.price.toFixed(2)} bawat isa</div>
+          </div>
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <div class="flex items-center border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+              <button onclick="modifyCartQty(${item.id}, -1)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black text-slate-600 active:bg-slate-200">-</button>
+              <span class="w-5 sm:w-6 text-center text-xs font-extrabold text-slate-800 font-mono">${item.qty}</span>
+              <button onclick="modifyCartQty(${item.id}, 1)" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-sm font-black text-slate-600 active:bg-slate-200">+</button>
+            </div>
+            <span class="text-xs font-black text-slate-800 w-12 sm:w-14 text-right font-mono">₱${subtotal.toFixed(2)}</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      document.getElementById("cart-total").innerText = `₱${total.toFixed(2)}`;
+      calculateChange();
+    }
+
+    function keypadPress(val) {
+      if (val === 'C') {
+        enteredTenderAmount = "";
+      } else {
+        if (enteredTenderAmount.length >= 7) return;
+        enteredTenderAmount += val;
+      }
+      calculateChange();
+    }
+
+    function setQuickCash(val) {
+      const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      if (val === 'exact') enteredTenderAmount = total.toString();
+      else enteredTenderAmount = val.toString();
+      calculateChange();
+    }
+
+    function calculateChange() {
+      const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      const cash = parseFloat(enteredTenderAmount) || 0;
+      const change = cash - total;
+
+      const cashDisplay = document.getElementById("cash-tendered-display");
+      const changeDisplay = document.getElementById("change-due");
+      const payBtn = document.getElementById("pay-btn");
+
+      cashDisplay.innerText = cash > 0 ? `₱${cash.toLocaleString()}` : "₱0";
+
+      if (total > 0 && cash >= total) {
+        changeDisplay.innerText = `₱${change.toFixed(2)}`;
+        changeDisplay.className = "text-sm sm:text-base font-black text-emerald-600 font-mono";
+        payBtn.disabled = false;
+        payBtn.innerText = `${t("complete_order")} (${t("paid_label")} ₱${cash})`;
+      } else {
+        changeDisplay.innerText = total > 0 ? t("insufficient") : "₱0.00";
+        changeDisplay.className = "text-xs sm:text-sm font-bold text-rose-500 font-mono";
+        payBtn.disabled = true;
+        payBtn.innerText = `${t("complete_order")} (₱${total.toFixed(2)})`;
+      }
+    }
+
+    function completeOrder() {
+      const total = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      const cash = parseFloat(enteredTenderAmount) || 0;
+      const change = cash - total;
+
+      cart.forEach(cartItem => {
+        const prod = products.find(p => p.id === cartItem.id);
+        if (prod && prod.recipe) {
+          prod.recipe.forEach(rec => {
+            const ing = ingredients.find(i => i.id === rec.ingId);
+            if (ing) {
+              const amountConsumed = rec.qty * cartItem.qty;
+              ing.consumed = (ing.consumed || 0) + amountConsumed;
+            }
+          });
+        }
+      });
+
+      const now = new Date();
+      const record = {
+        id: Date.now(),
+        timestamp: now.getTime(),
+        dateString: now.toLocaleDateString(),
+        timeString: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        items: [...cart],
+        totalCups: cart.reduce((a, b) => a + b.qty, 0),
+        totalAmount: total,
+        paid: cash,
+        change: change
+      };
+
+      salesHistory.unshift(record);
+      saveState();
+
+      alert(currentLang === 'en' 
+        ? `✅ Sale Confirmed!\nPaid: ₱${cash.toFixed(2)}\nChange: ₱${change.toFixed(2)}\nStock and expenses updated!`
+        : `✅ Kumpirmado ang Benta!\nBayad: ₱${cash.toFixed(2)}\nSukli: ₱${change.toFixed(2)}\nNa-update ang imbentaryo at talaan!`);
+
+      clearCart();
+      renderPOSProducts();
+      renderIngredientsTable();
+    }
+
+    // SECTION 1: SUPPLIES TABLE
+    function renderIngredientsTable() {
+      const tbody = document.getElementById("ingredients-tbody");
+      tbody.innerHTML = "";
+
+      ingredients.forEach(ing => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50";
+
+        const totalStockVal = typeof ing.totalStock !== 'undefined' ? ing.totalStock : (ing.stock || 0);
+        const consumedVal = ing.consumed || 0;
+        const currentRemaining = Math.max(0, totalStockVal - consumedVal);
+        const isLow = currentRemaining <= ing.alert;
+
+        const totalCell = isOwnerUnlocked
+          ? `<div class="flex items-center gap-1 font-mono">
+               <input type="number" min="0" step="any" value="${totalStockVal}" 
+                 onchange="updateTotalStock(${ing.id}, this.value)" 
+                 class="w-20 sm:w-24 border border-slate-300 rounded-xl px-2 py-1 text-xs text-slate-800 font-bold focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+             </div>`
+          : `<span class="font-extrabold text-slate-800 font-mono">${totalStockVal}</span>`;
+
+        const consumedCell = `<span class="font-bold text-amber-700 font-mono bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">${consumedVal}</span>`;
+        const currentCell = `<span class="font-extrabold font-mono text-sm ${isLow ? 'text-rose-600' : 'text-emerald-700'}">${currentRemaining}</span>`;
+
+        const alertCell = isOwnerUnlocked
+          ? `<input type="number" min="0" step="any" value="${ing.alert}" 
+               onchange="updateIngredientAlert(${ing.id}, this.value)" 
+               class="w-16 sm:w-20 border border-slate-300 rounded-xl px-2 py-1 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-amber-400 focus:outline-none" />`
+          : `<span class="text-xs text-slate-500 font-mono">${ing.alert}</span>`;
+
+        const deleteCell = isOwnerUnlocked
+          ? `<td class="p-3 text-right">
+               <button onclick="deleteIngredient(${ing.id})" class="text-xs text-rose-500 hover:underline px-2 py-1">${t("delete_btn")}</button>
+             </td>`
+          : ``;
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">${ing.name}</td>
+          <td class="p-3">${totalCell}</td>
+          <td class="p-3">${consumedCell}</td>
+          <td class="p-3">${currentCell}</td>
+          <td class="p-3 text-xs text-slate-500 font-semibold">${ing.unit}</td>
+          <td class="p-3">${alertCell}</td>
+          <td class="p-3">
+            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${isLow ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'} uppercase">
+              ${isLow ? t("status_low") : t("status_ok")}
+            </span>
+          </td>
+          ${deleteCell}
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateTotalStock(id, newTotal) {
+      if (!isOwnerUnlocked) return;
+      const ing = ingredients.find(i => i.id === id);
+      const val = parseFloat(newTotal);
+      if (ing && !isNaN(val) && val >= 0) {
+        ing.totalStock = val;
+        saveState();
+        renderIngredientsTable();
+      }
+    }
+
+    function updateIngredientAlert(id, newAlert) {
+      if (!isOwnerUnlocked) return;
+      const ing = ingredients.find(i => i.id === id);
+      const val = parseFloat(newAlert);
+      if (ing && !isNaN(val) && val >= 0) {
+        ing.alert = val;
+        saveState();
+        renderIngredientsTable();
+      }
+    }
+
+    function deleteIngredient(id) {
+      if (!isOwnerUnlocked) return;
+      const ing = ingredients.find(i => i.id === id);
+      const confirmMsg = currentLang === 'en' ? `Remove "${ing.name}" from ingredients?` : `Tanggalin ang "${ing.name}" sa mga sangkap?`;
+      if (ing && confirm(confirmMsg)) {
+        ingredients = ingredients.filter(i => i.id !== id);
+        saveState();
+        renderIngredientsTable();
+        renderProductsTable();
+      }
+    }
+
+    function openAddIngredientModal() {
+      if (!isOwnerUnlocked) return;
+      document.getElementById("ingredient-modal").classList.remove("hidden");
+      document.getElementById("ingredient-modal").classList.add("flex");
+    }
+
+    function closeAddIngredientModal() {
+      document.getElementById("ingredient-modal").classList.add("hidden");
+      document.getElementById("ingredient-modal").classList.remove("flex");
+    }
+
+    function saveNewIngredient() {
+      if (!isOwnerUnlocked) return;
+      const name = document.getElementById("modal-ing-name").value.trim();
+      const total = parseFloat(document.getElementById("modal-ing-total").value);
+      const unit = document.getElementById("modal-ing-unit").value.trim();
+      const alertTh = parseFloat(document.getElementById("modal-ing-alert").value);
+
+      if (!name || isNaN(total) || !unit || isNaN(alertTh)) {
+        alert(currentLang === 'en' ? "Please fill all supply fields properly!" : "Pakipunan ang lahat ng kahon nang maayos!");
+        return;
+      }
+
+      ingredients.push({ 
+        id: Date.now(), 
+        name, 
+        totalStock: total, 
+        consumed: 0, 
+        unit, 
+        alert: alertTh 
+      });
+
+      saveState();
+      closeAddIngredientModal();
+      renderIngredientsTable();
+    }
+
+    // SECTION 2: PRODUCTS, RECIPES & COSTS TABLE
+    function renderProductsTable() {
+      const tbody = document.getElementById("products-tbody");
+      tbody.innerHTML = "";
+
+      products.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50";
+
+        const pCost = p.cost || 0;
+        const profitPerCup = p.price - pCost;
+
+        const priceCell = isOwnerUnlocked
+          ? `<div class="flex items-center gap-1 font-mono">
+               <span class="text-xs font-bold text-slate-500">₱</span>
+               <input type="number" min="0" step="any" value="${p.price}" 
+                 onchange="updatePrice(${p.id}, this.value)" 
+                 class="w-18 border border-slate-300 rounded-xl px-2 py-1 text-xs text-slate-800 font-bold focus:ring-2 focus:ring-amber-400 focus:outline-none" />
+             </div>`
+          : `<span class="font-bold text-slate-700 font-mono">₱${p.price.toFixed(2)}</span>`;
+
+        const costCell = isOwnerUnlocked
+          ? `<div class="flex items-center gap-1 font-mono">
+               <span class="text-xs font-bold text-rose-500">₱</span>
+               <input type="number" min="0" step="any" value="${pCost}" 
+                 onchange="updateProductCost(${p.id}, this.value)" 
+                 class="w-18 border border-rose-200 bg-rose-50/30 rounded-xl px-2 py-1 text-xs text-rose-800 font-bold focus:ring-2 focus:ring-rose-400 focus:outline-none" />
+             </div>`
+          : `<span class="font-bold text-rose-700 font-mono">₱${pCost.toFixed(2)}</span>`;
+
+        const marginCell = `<span class="font-bold font-mono text-xs ${profitPerCup >= 0 ? 'text-emerald-700' : 'text-rose-600'}">₱${profitPerCup.toFixed(2)}</span>`;
+
+        const recipeSummary = (p.recipe && p.recipe.length > 0)
+          ? p.recipe.map(r => {
+              const ing = ingredients.find(i => i.id === r.ingId);
+              return ing ? `<span class="inline-block bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg text-[10px] sm:text-[11px] font-semibold mr-1 mb-1">${r.qty} ${ing.unit} ${ing.name}</span>` : '';
+            }).join("")
+          : `<span class="text-xs text-slate-400 italic">${currentLang === 'en' ? 'No ingredients assigned' : 'Walang sangkap'}</span>`;
+
+        const actionCell = isOwnerUnlocked
+          ? `<div class="flex justify-end gap-1.5 sm:gap-2">
+               <button onclick="openRecipeModal(${p.id})" class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-bold bg-amber-500 hover:bg-amber-400 text-white rounded-xl shadow-sm active:scale-95">
+                 ${t("edit_recipe_btn")}
+               </button>
+               <button onclick="deleteProduct(${p.id})" class="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-xl active:scale-95">
+                 ${t("delete_btn")}
+               </button>
+             </div>`
+          : `<span class="text-xs text-slate-400 italic">${t("locked_label")}</span>`;
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">${p.name}</td>
+          <td class="p-3">${priceCell}</td>
+          <td class="p-3">${costCell}</td>
+          <td class="p-3">${marginCell}</td>
+          <td class="p-3">${recipeSummary}</td>
+          <td class="p-3 text-right">${actionCell}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updatePrice(id, newPrice) {
+      if (!isOwnerUnlocked) return;
+      const item = products.find(p => p.id === id);
+      const parsed = parseFloat(newPrice);
+      if (item && !isNaN(parsed) && parsed >= 0) {
+        item.price = parsed;
+        saveState();
+        renderProductsTable();
+      }
+    }
+
+    function updateProductCost(id, newCost) {
+      if (!isOwnerUnlocked) return;
+      const item = products.find(p => p.id === id);
+      const parsed = parseFloat(newCost);
+      if (item && !isNaN(parsed) && parsed >= 0) {
+        item.cost = parsed;
+        saveState();
+        renderProductsTable();
+      }
+    }
+
+    function deleteProduct(id) {
+      if (!isOwnerUnlocked) return;
+      const item = products.find(p => p.id === id);
+      const confirmMsg = currentLang === 'en' ? `Delete "${item.name}" from menu?` : `Tanggalin ang "${item.name}" sa menu?`;
+      if (item && confirm(confirmMsg)) {
+        products = products.filter(p => p.id !== id);
+        saveState();
+        renderProductsTable();
+        renderPOSProducts();
+      }
+    }
+
+    function openAddFlavorModal() {
+      if (!isOwnerUnlocked) return;
+      document.getElementById("flavor-modal").classList.remove("hidden");
+      document.getElementById("flavor-modal").classList.add("flex");
+    }
+
+    function closeAddFlavorModal() {
+      document.getElementById("flavor-modal").classList.add("hidden");
+      document.getElementById("flavor-modal").classList.remove("flex");
+    }
+
+    function saveNewFlavor() {
+      if (!isOwnerUnlocked) return;
+      const name = document.getElementById("modal-flavor-name").value.trim();
+      const price = parseFloat(document.getElementById("modal-flavor-price").value);
+      const cost = parseFloat(document.getElementById("modal-flavor-cost").value) || 0;
+
+      if (!name || isNaN(price)) {
+        alert(currentLang === 'en' ? "Please fill flavor name and price!" : "Pakilagay ang pangalan at presyo ng benta!");
+        return;
+      }
+
+      const newProd = {
+        id: Date.now(),
+        name,
+        price,
+        cost: cost >= 0 ? cost : 0,
+        recipe: [
+          { ingId: 1, qty: 1 },
+          { ingId: 2, qty: 1 }
+        ]
+      };
+
+      products.push(newProd);
+      saveState();
+      closeAddFlavorModal();
+      renderProductsTable();
+      renderPOSProducts();
+    }
+
+    function openRecipeModal(productId) {
+      if (!isOwnerUnlocked) return;
+      currentEditingProductId = productId;
+      const prod = products.find(p => p.id === productId);
+      if (!prod) return;
+
+      document.getElementById("recipe-modal-title").innerText = `${t("edit_recipe_btn")}: ${prod.name}`;
+      const container = document.getElementById("recipe-rows-container");
+      container.innerHTML = "";
+
+      if (prod.recipe && prod.recipe.length > 0) {
+        prod.recipe.forEach(r => addRecipeRow(r.ingId, r.qty));
+      } else {
+        addRecipeRow();
+      }
+
+      document.getElementById("recipe-modal").classList.remove("hidden");
+      document.getElementById("recipe-modal").classList.add("flex");
+    }
+
+    function closeRecipeModal() {
+      document.getElementById("recipe-modal").classList.add("hidden");
+      document.getElementById("recipe-modal").classList.remove("flex");
+      currentEditingProductId = null;
+    }
+
+    function addRecipeRow(selectedIngId = null, qtyValue = 1) {
+      const container = document.getElementById("recipe-rows-container");
+      const row = document.createElement("div");
+      row.className = "recipe-row flex items-center gap-2 bg-slate-50 p-2 sm:p-2.5 rounded-xl border border-slate-200";
+
+      let chooseLabel = currentLang === 'en' ? "-- Choose Ingredient --" : "-- Pumili ng Sangkap --";
+      let optionsHTML = `<option value="">${chooseLabel}</option>`;
+      ingredients.forEach(ing => {
+        optionsHTML += `<option value="${ing.id}" ${ing.id === selectedIngId ? 'selected' : ''}>${ing.name} (${ing.unit})</option>`;
+      });
+
+      row.innerHTML = `
+        <select class="recipe-ing-select flex-1 text-xs border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white">
+          ${optionsHTML}
+        </select>
+        <div class="flex items-center gap-1 w-24 sm:w-28">
+          <input type="number" min="0.1" step="any" value="${qtyValue}" 
+            class="recipe-qty-input w-full text-xs font-bold border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-amber-400 bg-white" />
+        </div>
+        <button onclick="this.parentElement.remove()" class="w-8 h-8 flex items-center justify-center text-rose-500 hover:bg-rose-100 rounded-lg text-lg font-bold">×</button>
+      `;
+
+      container.appendChild(row);
+    }
+
+    function saveRecipeChanges() {
+      if (!currentEditingProductId) return;
+      const prod = products.find(p => p.id === currentEditingProductId);
+      if (!prod) return;
+
+      const rows = document.querySelectorAll(".recipe-row");
+      const newRecipe = [];
+
+      rows.forEach(r => {
+        const ingId = parseInt(r.querySelector(".recipe-ing-select").value);
+        const qty = parseFloat(r.querySelector(".recipe-qty-input").value);
+        if (!isNaN(ingId) && !isNaN(qty) && qty > 0) {
+          newRecipe.push({ ingId, qty });
+        }
+      });
+
+      prod.recipe = newRecipe;
+      saveState();
+      closeRecipeModal();
+      renderProductsTable();
+      alert(currentLang === 'en' ? "✅ Recipe updated successfully!" : "✅ Na-save ang bagong resipe!");
+    }
+
+    // SECTION 3: ANALYTICS, EXPENSES & INCOME ENGINE
+    function setTimeFilter(range) {
+      currentTimeFilter = range;
+      ['today', 'week', 'month', 'all'].forEach(r => {
+        const btn = document.getElementById(`btn-filter-${r}`);
+        if (r === range) {
+          btn.className = "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-white text-slate-900 shadow-sm active:scale-95";
+        } else {
+          btn.className = "px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-slate-600 hover:text-slate-900 active:scale-95";
+        }
+      });
+
+      const labelMap = {
+        today: t("filter_today"),
+        week: t("filter_week"),
+        month: t("filter_month"),
+        all: t("filter_all")
+      };
+      document.getElementById("filtered-range-label").innerText = labelMap[range];
+      document.getElementById("product-income-filter-badge").innerText = labelMap[range];
+      renderAnalytics();
+    }
+
+    function isSameDay(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth() &&
+             d1.getDate() === d2.getDate();
+    }
+
+    function isWithinWeek(date, now) {
+      const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      return date >= sevenDaysAgo && date <= now;
+    }
+
+    function isSameMonth(d1, d2) {
+      return d1.getFullYear() === d2.getFullYear() &&
+             d1.getMonth() === d2.getMonth();
+    }
+
+    function renderAnalytics() {
+      const now = new Date();
+
+      let filteredCups = 0;
+      let filteredRevenue = 0;
+      let filteredExpense = 0;
+
+      const productStats = {};
+      products.forEach(p => {
+        productStats[p.name] = { 
+          id: p.id,
+          price: p.price, 
+          cost: p.cost || 0,
+          cups: 0, 
+          revenue: 0,
+          expense: 0
+        };
+      });
+
+      salesHistory.forEach(tx => {
+        const txDate = new Date(tx.timestamp || tx.id);
+
+        let inCurrentRange = false;
+        if (currentTimeFilter === "today") inCurrentRange = isSameDay(txDate, now);
+        else if (currentTimeFilter === "week") inCurrentRange = isWithinWeek(txDate, now);
+        else if (currentTimeFilter === "month") inCurrentRange = isSameMonth(txDate, now);
+        else inCurrentRange = true;
+
+        if (inCurrentRange) {
+          filteredCups += tx.totalCups;
+
+          tx.items.forEach(item => {
+            const matchingProd = products.find(p => p.name === item.name);
+            const unitCost = matchingProd ? (matchingProd.cost || 0) : (item.cost || 0);
+
+            if (!productStats[item.name]) {
+              productStats[item.name] = { 
+                id: item.id, 
+                price: item.price, 
+                cost: unitCost, 
+                cups: 0, 
+                revenue: 0,
+                expense: 0 
+              };
+            }
+
+            const itemRevenue = item.qty * item.price;
+            const itemExpense = item.qty * unitCost;
+
+            productStats[item.name].cups += item.qty;
+            productStats[item.name].revenue += itemRevenue;
+            productStats[item.name].expense += itemExpense;
+
+            filteredRevenue += itemRevenue;
+            filteredExpense += itemExpense;
+          });
+        }
+      });
+
+      const filteredNetProfit = filteredRevenue - filteredExpense;
+      const profitMarginPct = filteredRevenue > 0 ? ((filteredNetProfit / filteredRevenue) * 100).toFixed(1) : 0;
+
+      document.getElementById("filter-stat-revenue").innerText = `₱${filteredRevenue.toFixed(2)}`;
+      document.getElementById("filter-stat-cups").innerText = `${filteredCups} ${t("cups_sold")}`;
+      document.getElementById("filter-stat-expense").innerText = `₱${filteredExpense.toFixed(2)}`;
+      document.getElementById("filter-stat-profit").innerText = `₱${filteredNetProfit.toFixed(2)}`;
+      document.getElementById("filter-stat-margin").innerText = `${profitMarginPct}% ${t("profit_margin_label")}`;
+
+      const sortedProductList = Object.keys(productStats).map(name => ({
+        name,
+        price: productStats[name].price,
+        cost: productStats[name].cost,
+        cups: productStats[name].cups,
+        revenue: productStats[name].revenue,
+        expense: productStats[name].expense,
+        profit: productStats[name].revenue - productStats[name].expense
+      })).sort((a, b) => b.revenue - a.revenue);
+
+      const bestSellerName = document.getElementById("best-seller-name");
+      const bestSellerStats = document.getElementById("best-seller-stats");
+      const topProductsSummary = document.getElementById("top-products-summary");
+
+      if (sortedProductList.length > 0 && sortedProductList[0].cups > 0) {
+        const top1 = sortedProductList[0];
+        bestSellerName.innerText = top1.name;
+        bestSellerStats.innerText = currentLang === 'en'
+          ? `Total Sold: ${top1.cups} cups (Generated ₱${top1.revenue.toFixed(2)} sales)`
+          : `Naibenta: ${top1.cups} baso (Kumita ng ₱${top1.revenue.toFixed(2)} benta)`;
+
+        topProductsSummary.innerHTML = sortedProductList.slice(0, 3).filter(f => f.cups > 0).map((f, i) => `
+          <div>
+            <span class="font-bold opacity-80">#${i + 1} ${f.name}</span>
+            <div class="font-black">${f.cups} ${t("cups_sold")} (Tubo: ₱${f.profit.toFixed(2)})</div>
+          </div>
+        `).join("");
+      } else {
+        bestSellerName.innerText = t("no_sales_yet");
+        bestSellerStats.innerText = t("record_orders_tip");
+        topProductsSummary.innerHTML = `<span class="italic text-amber-100">${t("no_products_period")}</span>`;
+      }
+
+      const prodIncomeTbody = document.getElementById("product-income-tbody");
+      prodIncomeTbody.innerHTML = "";
+
+      sortedProductList.forEach(prod => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50";
+
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-slate-800">${prod.name}</td>
+          <td class="p-3 text-center font-bold font-mono ${prod.cups > 0 ? 'text-amber-600' : 'text-slate-400'}">${prod.cups}</td>
+          <td class="p-3 font-mono text-slate-600">₱${prod.price.toFixed(2)}</td>
+          <td class="p-3 font-mono text-rose-500">₱${prod.cost.toFixed(2)}</td>
+          <td class="p-3 font-mono font-bold ${prod.revenue > 0 ? 'text-blue-600' : 'text-slate-400'}">₱${prod.revenue.toFixed(2)}</td>
+          <td class="p-3 font-mono font-bold ${prod.expense > 0 ? 'text-rose-600' : 'text-slate-400'}">₱${prod.expense.toFixed(2)}</td>
+          <td class="p-3 font-mono font-extrabold ${prod.profit >= 0 ? 'text-emerald-600' : 'text-rose-600'}">₱${prod.profit.toFixed(2)}</td>
+        `;
+        prodIncomeTbody.appendChild(tr);
+      });
+
+      document.getElementById("foot-total-cups").innerText = `${filteredCups} ${t("cups_sold")}`;
+      document.getElementById("foot-total-income").innerText = `₱${filteredRevenue.toFixed(2)}`;
+      document.getElementById("foot-total-expense").innerText = `₱${filteredExpense.toFixed(2)}`;
+      document.getElementById("foot-total-profit").innerText = `₱${filteredNetProfit.toFixed(2)}`;
+
+      const tbody = document.getElementById("sales-tbody");
+      tbody.innerHTML = "";
+
+      const filteredOrders = salesHistory.filter(tx => {
+        const txDate = new Date(tx.timestamp || tx.id);
+        if (currentTimeFilter === "today") return isSameDay(txDate, now);
+        if (currentTimeFilter === "week") return isWithinWeek(txDate, now);
+        if (currentTimeFilter === "month") return isSameMonth(txDate, now);
+        return true;
+      });
+
+      if (filteredOrders.length === 0) {
+        const emptyMsg = currentLang === 'en' ? "No sales recorded for this period." : "Walang benta na naitala sa panahong ito.";
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 italic">${emptyMsg}</td></tr>`;
+        return;
+      }
+
+      filteredOrders.forEach(tx => {
+        const itemSummary = tx.items.map(i => `${i.qty}x ${i.name}`).join(", ");
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 text-slate-500 font-mono">${tx.dateString || ''} ${tx.timeString || tx.time}</td>
+          <td class="p-3 font-semibold text-slate-800">${itemSummary}</td>
+          <td class="p-3 font-bold text-slate-900 font-mono">₱${tx.totalAmount.toFixed(2)}</td>
+          <td class="p-3 text-slate-600 font-mono">₱${tx.paid.toFixed(2)}</td>
+          <td class="p-3 text-emerald-600 font-bold font-mono">₱${tx.change.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function clearSalesHistory() {
+      if (!isOwnerUnlocked) {
+        alert(currentLang === 'en' ? "🔒 Unauthorized: Only the owner can reset logs." : "🔒 May-ari lamang ang may karapatang magbura.");
+        return;
+      }
+      const confirmClear = currentLang === 'en' 
+        ? "Are you sure you want to permanently clear all income and expense logs?" 
+        : "Sigurado ka bang nais mong burahin ang lahat ng talaan ng kita at gastos?";
+      if (confirm(confirmClear)) {
+        salesHistory = [];
+        saveState();
+        renderAnalytics();
+      }
+    }
+
+    // Launch Application
+    renderStoreName();
+    applyScale();
+    applyTranslations();
+    renderPOSProducts();
+    renderCart();
+    updateOwnerUI();
+  </script>
 </body>
 </html>
